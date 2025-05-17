@@ -138,9 +138,9 @@ async def chat(ctx : discord.Message, *, text):
                         await ctx.channel.send(message_content[i:i+2000])
 
             await chatcontext_append(ctx.guild.id, f'{author}: {text}')
-            await chatcontext_append(ctx.guild.id,f'bot: {str(response["choices"][0]["message"]["content"].strip())}')
+            await chatcontext_append(ctx.guild.id,f'bot: {str(response.choices[0].message.content.strip())}')
             print(f'[!chat] {ctx.guild.name} | {author}: {text}')
-            print(f'{bot.user}: {str(response["choices"][0]["message"]["content"].strip())}')
+            print(f'{bot.user}: {str(response.choices[0].message.content.strip())}')
 
         else:
             print(f'[!chat] {ctx.guild.name} | {author}: {text}')
