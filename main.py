@@ -113,7 +113,7 @@ async def chat(ctx : discord.Message, *, text):
             messages.append({"role": "user", "content": text})
 
 
-        response = await openai.chat.completions.create(model="gpt-4",
+        response = openai.chat.completions.create(model="gpt-4",
         messages= messages,
         user = str(ctx.author.id))
         await asyncio.sleep(0.1)
