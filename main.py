@@ -124,7 +124,7 @@ async def chat(ctx : discord.Message, *, text):
         await asyncio.sleep(0.1)
 
 
-        if response["choices"][0]["finish_reason"] in ["stop","length"]:
+        if response.choices[0].finish_reason in ["stop","length"]:
             activity = discord.Activity(name=f"{author}", type=discord.ActivityType.listening)
             await bot.change_presence(status=discord.Status.online, activity=activity)
 
