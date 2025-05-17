@@ -129,7 +129,7 @@ async def chat(ctx : discord.Message, *, text):
             await bot.change_presence(status=discord.Status.online, activity=activity)
 
 
-            message_content = response["choices"][0]["message"]["content"].strip()
+            message_content = response.choices[0].message.content.strip()
             async with ctx.channel.typing():
                 for i in range(0, len(message_content), 2000): 
                     if i == 0:
