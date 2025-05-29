@@ -1,3 +1,5 @@
+#central functionality of the bot, plus front-end command control
+
 import os, json, logging, asyncpg, asyncio
 
 import discord
