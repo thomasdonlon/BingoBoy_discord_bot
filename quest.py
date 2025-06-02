@@ -54,7 +54,10 @@ async def read_quest_from_db(state): #load in quest from db after saving it
 #---------------------------------------
 
 class Quest:
-	async def __init__(self, state, difficulty):
+	@classmethod
+	# Factory method to create a Quest instance (have to do it this way rather than __init__ because of the async nature of the code)
+	async def create(cls, state, difficulty):
+		self = cls()
 		self.name = None
 		self.difficulty = difficulty #str, 'easy', 'medium' or 'hard'
 		self.current_step_num = 0
@@ -66,6 +69,7 @@ class Quest:
 
 		await self.start_quest(state)
 		await self.write_quest_to_db(state)
+		return self
 
 	@classmethod
 	# Factory method to create a Quest instance from a saved state

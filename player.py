@@ -204,7 +204,7 @@ async def start_quest(state, difficulty):
 			return
 
 	#initialize the quest object and write it to the database
-	quest = Quest(state, difficulty)
+	quest = Quest.create(state, difficulty)
 	await quest.start_quest(state)
 
 async def progress_quest(state):
