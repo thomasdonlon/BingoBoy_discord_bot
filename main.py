@@ -196,7 +196,7 @@ async def sync(interaction: discord.Interaction):
 @app_commands.guilds(discord.Object(id = test_guild_id))
 @run_with_error_handling
 async def sync_guild(interaction: discord.Interaction):
-    await self.tree.sync(guild=discord.Object(id=test_guild_id))
+    await bot.tree.sync(guild=discord.Object(id=test_guild_id))
 
 #--------------------------------------
 # PLAYER COMMANDS
