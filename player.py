@@ -203,9 +203,8 @@ async def start_quest(state, difficulty):
 			await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.")
 			return
 
-	#initialize the quest object and write it to the database
-	quest = Quest.create(state, difficulty)
-	await quest.start_quest(state)
+	#initialize the quest object (starts the quest and writes it to the database)
+	await Quest.create(state, difficulty)
 
 async def progress_quest(state):
 	#check if the player has a quest
