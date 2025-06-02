@@ -91,8 +91,8 @@ def is_valid_task_name(task_name):
 
 async def end_game(winning_player):
     #stop the status display if it's running
+    global display_running
     if display_running:
-        global display_running
         display_running = False
         print(f"Status display stopped.")
         display_player_status.stop()
