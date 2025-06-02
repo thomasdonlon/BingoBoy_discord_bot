@@ -152,10 +152,9 @@ async def on_guild_remove(guild:discord.Guild):
 #     await bot.tree.sync()
 #     print('Global command tree synced.')
 
-# @discord.app_commands.guilds(discord.Object(id = test_guild_id))
-# @run_with_error_handling
-# async def sync_test(interaction: discord.Interaction):
-#     await bot.tree.sync(guild=discord.Object(id=test_guild_id))
+@discord.app_commands.guilds(discord.Object(id = test_guild_id))
+async def sync_test(interaction: discord.Interaction):
+    await bot.tree.sync(guild=discord.Object(id=test_guild_id))
 
 @commands.command()
 async def sync(ctx : discord.Interaction):
