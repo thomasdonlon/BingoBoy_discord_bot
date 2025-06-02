@@ -285,7 +285,7 @@ async def status(ctx : discord.Interaction) -> None:
     state = State(bot, ctx, ctx.channel.name)
 
     async with bot.pool.acquire() as con:
-        current_player = await con.fetch('SELECT * FROM data WHERE name = $1', ctx.channel)
+        current_player = await con.fetch('SELECT * FROM data WHERE name = $1', state.player)
         current_player = current_player[0] if current_player else None
 
         if not current_player:
