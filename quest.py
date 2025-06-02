@@ -65,7 +65,7 @@ class Quest:
 		self.text_log = [] #holds previous AI text for context
 
 		self.start_quest(state)
-		self.write_quest_to_db()
+		self.write_quest_to_db(state)
 
 	@classmethod
 	# Factory method to create a Quest instance from a saved state
