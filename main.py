@@ -177,8 +177,8 @@ async def start_status_display(ctx : discord.Interaction):
 @bot.slash_command(name="stop_status_display", description="Stops the game status tracker.")
 @run_with_error_handling
 async def stop_status_display(ctx : discord.Interaction):
+    global display_running
     if display_running:
-        global display_running
         display_running = False
         await ctx.response.send_message(f"Status display stopped.", ephemeral=True)
         display_player_status.stop()
