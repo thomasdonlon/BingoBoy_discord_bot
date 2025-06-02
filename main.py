@@ -181,14 +181,14 @@ async def sync(ctx: commands.Context) -> None:
 # ADMIN COMMANDS/TOOLS
 #--------------------------------------
 
-@bot.slash_command(name="init_channel", description="Start bot in this channel (Admin Only).")
+@tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
 @run_with_error_handling
 async def init_channel(ctx : discord.Interaction):
     await player.init(State(bot, ctx, ctx.channel))
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
 
-@bot.slash_command(name="override", description="Manual value override for debugging/triage (Admin Only).")
+@tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
 @run_with_error_handling
 async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str | int):
@@ -196,7 +196,7 @@ async def override(ctx : discord.Interaction, player : str, parameter_name : str
         await con.execute(f"UPDATE data SET {parameter_name} = '{value}' WHERE name = '{player}'")
     await ctx.response.send_message(f"Value override successful.", ephemeral=True)
 
-@bot.slash_command(name="start_status_display", description="Starts the game status tracker in this channel (Admin Only).")
+@tree.command(name="start_status_display", description="Starts the game status tracker in this channel (Admin Only).")
 @run_with_error_handling
 async def start_status_display(ctx : discord.Interaction):
     global display_running
@@ -207,7 +207,7 @@ async def start_status_display(ctx : discord.Interaction):
     else:
         await ctx.response.send_message(f"Status display is already running.", ephemeral=True)
 
-@bot.slash_command(name="stop_status_display", description="Stops the game status tracker (Admin Only).")
+@tree.command(name="stop_status_display", description="Stops the game status tracker (Admin Only).")
 @run_with_error_handling
 async def stop_status_display(ctx : discord.Interaction):
     global display_running
@@ -222,7 +222,7 @@ async def stop_status_display(ctx : discord.Interaction):
 # PLAYER COMMANDS
 #--------------------------------------
 
-@bot.slash_command(name="quest", description="Manages a quest.")
+@tree.command(name="quest", description="Manages a quest.")
 @run_with_error_handling
 async def quest(ctx : discord.Interaction, action : str, difficulty : str = None):
     state = State(bot, ctx, ctx.channel)
@@ -266,14 +266,14 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         #abandon the quest
         await player.abandon_quest(state)
 
-@bot.slash_command(name="sidequest", description="Completes a sidequest.")
+@tree.command(name="sidequest", description="Completes a sidequest.")
 @run_with_error_handling
 async def sidequest(ctx : discord.Interaction):
     state = State(bot, ctx, ctx.channel)
     await player.complete_sidequest(state)
     #await ctx.response.send_message("Sidequest completed!", ephemeral=True)
 
-@bot.slash_command(name="status", description="Shows your current status.")
+@tree.command(name="status", description="Shows your current status.")
 @run_with_error_handling
 async def status(ctx : discord.Interaction):
     state = State(bot, ctx, ctx.channel)
@@ -304,7 +304,7 @@ async def status(ctx : discord.Interaction):
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
-@bot.slash_command(name="task", description="Log the completion of a task.")
+@tree.command(name="task", description="Log the completion of a task.")
 @run_with_error_handling
 async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = None):
 
@@ -362,7 +362,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         # Send a confirmation message
         await ctx.response.send_message(f"Task '{task_name}' logged successfully.", ephemeral=True)
 
-@bot.slash_command(name="skill", description="Level up a skill.")
+@tree.command(name="skill", description="Level up a skill.")
 @run_with_error_handling
 async def skill(ctx : discord.Interaction, skill_name : str, number : int):
     #check if the skill name is valid
@@ -379,7 +379,7 @@ async def skill(ctx : discord.Interaction, skill_name : str, number : int):
     await player.allocate_skill_points(state, skill_name, number)
     
 
-@bot.slash_command(name="item", description="Buy an item from the shop.")
+@tree.command(name="item", description="Buy an item from the shop.")
 @run_with_error_handling
 async def item(ctx : discord.Interaction, item_name : str):
     state = State(bot, ctx, ctx.channel)
