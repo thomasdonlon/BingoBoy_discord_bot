@@ -73,9 +73,9 @@ async def display_player_status():
         print(f'display_player_status threw an error: {e}')
 
 #decorator that runs a function as a try/except block, catching any exceptions and printing them to the console
-def run_with_error_handling(func : callable):
+def run_with_error_handling(func : callable) -> callable:
     """Decorator to run a function with error handling."""
-    async def wrapper(*args : tuple, **kwargs : dict):
+    async def wrapper(*args : tuple, **kwargs : dict) -> None:
         #the first argument is expected to be a ctx object
         ctx = args[0]
         if not isinstance(ctx, discord.Interaction) and not isinstance(ctx, discord.Message):
