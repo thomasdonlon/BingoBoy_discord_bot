@@ -9,50 +9,50 @@ async def init(state):
 	async with state.bot.pool.acquire() as con:   
 		await con.execute(f'''CREATE TABLE IF NOT EXISTS data (
 						
-				name				  VARCHAR '',
-				level                 INT  PRIMARY KEY NOT NULL,
-				xp                    INT  PRIMARY KEY NOT NULL,      
-				easy_quest            INT  PRIMARY KEY NOT NULL,      
-				medium_quest          INT  PRIMARY KEY NOT NULL,     
-				hard_quest            INT  PRIMARY KEY NOT NULL,
-				easy_quest_points     INT  PRIMARY KEY NOT NULL,      
-				medium_quest_points   INT  PRIMARY KEY NOT NULL,     
-				hard_quest_points     INT  PRIMARY KEY NOT NULL,      
-				sidequest             INT  PRIMARY KEY NOT NULL, 
-				strength_level        INT  PRIMARY KEY NOT NULL,    
-				agility_level         INT  PRIMARY KEY NOT NULL,    
-				wisdom_level          INT  PRIMARY KEY NOT NULL,  
-				skill_points          INT  PRIMARY KEY NOT NULL,     
-				exploration_avail     INT  PRIMARY KEY NOT NULL,          
-				combat_avail          INT  PRIMARY KEY NOT NULL,    
-				puzzle_avail          INT  PRIMARY KEY NOT NULL,      
-				dialogue_avail        INT  PRIMARY KEY NOT NULL, 
-				debauchery_avail      INT  PRIMARY KEY NOT NULL,                
-				inventory             TEXT  [],
-				current_quest         TEXT  [],
-				last_logged_task      VARCHAR ''
+				name				  VARCHAR PRIMARY KEY NOT NULL,
+				level                 INT DEFAULT 1,
+				xp                    INT DEFAULT 0,
+				easy_quest            INT DEFAULT 0,
+				medium_quest          INT DEFAULT 0,
+				hard_quest            INT DEFAULT 0,
+				easy_quest_points     INT DEFAULT 0,
+				medium_quest_points   INT DEFAULT 0,
+				hard_quest_points     INT DEFAULT 0,
+				sidequest             INT DEFAULT 0,
+				strength_level        INT DEFAULT 0,
+				agility_level         INT DEFAULT 0,
+				wisdom_level          INT DEFAULT 0,
+				skill_points          INT DEFAULT 1,
+				exploration_avail     INT DEFAULT 0,
+				combat_avail          INT DEFAULT 0,
+				puzzle_avail          INT DEFAULT 0,
+				dialogue_avail        INT DEFAULT 0,
+				debauchery_avail      INT DEFAULT 0,
+				inventory             TEXT DEFAULT '',
+				current_quest         TEXT DEFAULT NULL,
+				last_logged_task      VARCHAR DEFAULT ''
 				)''')
 
-		#set default values
-		await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
-		await con.execute(f'INSERT INTO data(level) VALUES(1) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(xp) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(easy_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(medium_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(hard_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(easy_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(medium_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(hard_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(sidequest) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(strength_level) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(agility_level) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(wisdom_level) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(skill_points) VALUES(1) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(exploration_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(combat_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(puzzle_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(dialogue_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		await con.execute(f'INSERT INTO data(debauchery_avail) VALUES(0) ON CONFLICT DO NOTHING')
+		# #set default values #no longer needed, now done in the table creation
+		# await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
+		# await con.execute(f'INSERT INTO data(level) VALUES(1) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(xp) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(easy_quest) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(medium_quest) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(hard_quest) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(easy_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(medium_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(hard_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(sidequest) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(strength_level) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(agility_level) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(wisdom_level) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(skill_points) VALUES(1) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(exploration_avail) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(combat_avail) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(puzzle_avail) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(dialogue_avail) VALUES(0) ON CONFLICT DO NOTHING')
+		# await con.execute(f'INSERT INTO data(debauchery_avail) VALUES(0) ON CONFLICT DO NOTHING')
 
 		print(f"Initialized channel: {state.player}")
 

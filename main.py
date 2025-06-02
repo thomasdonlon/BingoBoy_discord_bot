@@ -180,7 +180,7 @@ async def sync(ctx: commands.Context) -> None:
 
 @tree.command(name="global_sync", description="Sync tree across all guilds (Owner Only).")
 @commands.is_owner()
-async def global_sync(ctx : discord.Interaction) -> None:
+async def global_sync(ctx : commands.Context) -> None:
     """Sync tree across all guilds (Owner Only)."""
     synced = await tree.sync()
     await ctx.response.send_message(f"Synced {len(synced)} commands globally.")
