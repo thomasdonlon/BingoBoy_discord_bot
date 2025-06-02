@@ -6,6 +6,7 @@ import os, logging, asyncpg
 import player
 from quest import format_quest_status, Quest
 from text_storage import get_item_name
+from typing import Literal, Optional
 
 import discord
 from discord.ext import commands, tasks
@@ -171,29 +172,62 @@ async def on_guild_remove(guild:discord.Guild):
 #     synced = await ctx.bot.tree.sync()
 #     await ctx.send(f"Synced {len(synced)} commands globally")
 
+# @bot.command()
+# @commands.is_owner()
+# async def sync(ctx: commands.Context) -> None:
+#     """Sync commands"""
+#     synced = await tree.sync()
+#     await ctx.send(f"Synced {len(synced)} commands locally.")
+
+# @tree.command(name="global_sync", description="Sync tree across all guilds (Owner Only).")
+# @commands.is_owner()
+# async def global_sync(ctx : discord.Interaction) -> None:
+#     """Sync tree across all guilds (Owner Only)."""
+#     await ctx.response.defer()  # Acknowledge the interaction immediately
+#     print("Starting global sync...")
+
+#     #sync to all whitelisted guilds
+#     guilds = [discord.Object(id=x) for x in whitelist]
+#     for guild in guilds:
+#         synced = await tree.sync(guild=guild)
+#         print(f"Synced {len(synced)} commands in guild {guild.id}")
+#         print(f"Synced commands: {[command.name for command in synced]}")
+
+#     print(f"Global sync complete. Synced {len(synced)} commands.")
+#     await ctx.followup.send(f"Synced {len(synced)} commands globally.")
+
 @bot.command()
+@commands.guild_only()
 @commands.is_owner()
-async def sync(ctx: commands.Context) -> None:
-    """Sync commands"""
-    synced = await tree.sync()
-    await ctx.send(f"Synced {len(synced)} commands locally.")
+async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
+    if not guilds:
+        if spec == "~":
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "^":
+            ctx.bot.tree.clear_commands(guild=ctx.guild)
+            await ctx.bot.tree.sync(guild=ctx.guild)
+            synced = []
+        else:
+            synced = await ctx.bot.tree.sync()
 
-@tree.command(name="global_sync", description="Sync tree across all guilds (Owner Only).")
-@commands.is_owner()
-async def global_sync(ctx : discord.Interaction) -> None:
-    """Sync tree across all guilds (Owner Only)."""
-    await ctx.response.defer()  # Acknowledge the interaction immediately
-    print("Starting global sync...")
+        await ctx.send(
+            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
 
-    #sync to all whitelisted guilds
-    guilds = [discord.Object(id=x) for x in whitelist]
+    ret = 0
     for guild in guilds:
-        synced = await tree.sync(guild=guild)
-        print(f"Synced {len(synced)} commands in guild {guild.id})")
-        print(f"Synced commands: {[command.name for command in synced]}")
+        try:
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            ret += 1
 
-    print(f"Global sync complete. Synced {len(synced)} commands.")
-    await ctx.followup.send(f"Synced {len(synced)} commands globally.")
+    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
 #--------------------------------------
 # ADMIN COMMANDS/TOOLS
