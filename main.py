@@ -187,7 +187,7 @@ async def global_sync(ctx : discord.Interaction) -> None:
 
     #sync to all whitelisted guilds
     guilds = [discord.Object(id=x) for x in whitelist]
-    synced = await ctx.bot.tree.sync(guild=guilds)
+    synced = await tree.sync(guild=guilds)
 
     print(f"Global sync complete. Synced {len(synced)} commands.")
     await ctx.followup.send(f"Synced {len(synced)} commands globally.")
