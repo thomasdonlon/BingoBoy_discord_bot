@@ -300,9 +300,11 @@ async def status(ctx : discord.Interaction) -> None:
     embed.add_field(name="Skill Points", value=current_player['skill_points'], inline=True)
     embed.add_field(name="Quests", value=f"Easy: {current_player['easy_quest']}, Medium: {current_player['medium_quest']}, Hard: {current_player['hard_quest']}", inline=False)
     embed.add_field(name="Item Points:", value=f"Easy: {current_player['easy_quest_points']}, Medium: {current_player['medium_quest_points']}, Hard: {current_player['hard_quest_points']}", inline=False)
-    current_quest = await Quest.from_state(state) if current_player['current_quest'] else 'None'
+    current_quest = await Quest.from_state(state) if current_player['current_quest'] else None
     if current_quest:
         embed.add_field(name="Current Quest", value=format_quest_status(current_quest), inline=False)
+    else:
+        embed.add_field(name="Current Quest", value="None", inline=False)
     embed.add_field(name="Sidequests", value=current_player['sidequest'], inline=False)
     embed.add_field(name="Tasks", value=f"Exploration: {current_player['exploration_avail']}\nCombat: {current_player['combat_avail']}\nPuzzle-Solving: {current_player['puzzle_avail']}\nDialogue: {current_player['dialogue_avail']}, \nDebauchery: {current_player['debauchery_avail']}\n", inline=False)
     inventory_text = '\n'.join([get_item_name(item) for item in current_player['inventory']]) if current_player['inventory'] else 'Empty'
