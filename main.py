@@ -190,7 +190,7 @@ async def init_channel(ctx : discord.Interaction) -> None:
 
 @tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
-async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str | int) -> None:
+async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str) -> None:
     async with bot.pool.acquire() as con:
         await con.execute(f"UPDATE data SET {parameter_name} = '{value}' WHERE name = '{player}'")
     await ctx.response.send_message(f"Value override successful.", ephemeral=True)
