@@ -182,6 +182,7 @@ async def sync(ctx: commands.Context) -> None:
 # ADMIN COMMANDS/TOOLS
 #--------------------------------------
 
+@run_with_error_handling
 @tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
 async def init_channel(ctx : discord.Interaction) -> None:
