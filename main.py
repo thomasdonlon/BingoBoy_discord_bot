@@ -240,14 +240,13 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
 
     if action == 'start':
         #ensure there is a difficulty argument
-        args = ctx.data.get('options', [])
         if not difficulty:
             await ctx.response.send_message("Error: You must specify a difficulty for the quest. Use 'easy' ('e'), 'medium' ('m'), or 'hard' ('h').", ephemeral=True)
             return
 
         #start the quest with the given difficulty
         #check that the difficulty is valid, and convert it to a full word if necessary
-        if difficulty not in ('easy', 'medium', 'hard', 'e', 'm', 'h', 'drunken-dragon'):
+        if difficulty in ('easy', 'medium', 'hard', 'e', 'm', 'h', 'drunken-dragon'):
             if difficulty in ('e', 'easy'):
                 difficulty = 'easy'
             elif difficulty in ('m', 'medium'):
