@@ -152,14 +152,22 @@ async def on_guild_remove(guild:discord.Guild):
 #     await bot.tree.sync()
 #     print('Global command tree synced.')
 
-@discord.app_commands.guilds(discord.Object(id = test_guild_id))
-async def sync_test(interaction: discord.Interaction):
-    await bot.tree.sync(guild=discord.Object(id=test_guild_id))
+# @discord.app_commands.guilds(discord.Object(id = test_guild_id))
+# async def sync_test(interaction: discord.Interaction):
+#     await bot.tree.sync(guild=discord.Object(id=test_guild_id))
 
-@commands.command()
-async def sync(ctx : discord.Interaction):
-    fmt = await bot.tree.sync()
-    await ctx.send(f"{len(fmt)} commands synced.")
+# @bot.slash_command(name="sync", description="Start bot in this channel (Admin Only).")
+# async def sync(ctx : discord.Interaction):
+#     fmt = await bot.tree.sync()
+#     await ctx.send(f"{len(fmt)} commands synced.")
+#     print('Global command tree synced.')
+
+@bot.command()
+@commands.is_owner()
+async def sync(ctx: commands.Context) -> None:
+    """Sync commands"""
+    synced = await ctx.bot.tree.sync()
+    await ctx.send(f"Synced {len(synced)} commands globally")
 
 #--------------------------------------
 # ADMIN COMMANDS/TOOLS
