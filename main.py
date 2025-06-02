@@ -8,7 +8,7 @@ from quest import format_quest_status, Quest
 from text_storage import get_item_name
 
 import discord
-from discord.ext import app_commands, commands, tasks, tree
+from discord.ext import commands, tasks, tree
 import openai
 
 
@@ -145,6 +145,18 @@ async def on_guild_remove(guild:discord.Guild):
 
     print(f"removed from {guild}")
 
+@bot.tree.command(name='sync', description='Owner only')
+@commands.is_owner()
+@run_with_error_handling
+async def sync(interaction: discord.Interaction):
+    await tree.sync()
+    print('Global command tree synced.')
+
+@discord.app_commands.guilds(discord.Object(id = test_guild_id))
+@run_with_error_handling
+async def sync_test(interaction: discord.Interaction):
+    await bot.tree.sync(guild=discord.Object(id=test_guild_id))
+
 #--------------------------------------
 # ADMIN COMMANDS/TOOLS
 #--------------------------------------
@@ -185,18 +197,6 @@ async def stop_status_display(ctx : discord.Interaction):
         display_player_status.stop()
     else:
         await ctx.response.send_message(f"Status display is not running.", ephemeral=True)
-
-@bot.tree.command(name='sync', description='Owner only')
-@commands.is_owner()
-@run_with_error_handling
-async def sync(interaction: discord.Interaction):
-    await tree.sync()
-    print('Global command tree synced.')
-
-@app_commands.guilds(discord.Object(id = test_guild_id))
-@run_with_error_handling
-async def sync_test(interaction: discord.Interaction):
-    await bot.tree.sync(guild=discord.Object(id=test_guild_id))
 
 #--------------------------------------
 # PLAYER COMMANDS
