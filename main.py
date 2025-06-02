@@ -148,54 +148,8 @@ async def on_guild_remove(guild:discord.Guild):
 
     print(f"removed from {guild}")
 
-# @bot.tree.command(name='sync', description='Owner only')
-# @commands.is_owner()
-# @run_with_error_handling
-# async def sync(interaction: discord.Interaction):
-#     await bot.tree.sync()
-#     print('Global command tree synced.')
-
-# @discord.app_commands.guilds(discord.Object(id = test_guild_id))
-# async def sync_test(interaction: discord.Interaction):
-#     await bot.tree.sync(guild=discord.Object(id=test_guild_id))
-
-# @bot.slash_command(name="sync", description="Start bot in this channel (Admin Only).")
-# async def sync(ctx : discord.Interaction):
-#     fmt = await bot.tree.sync()
-#     await ctx.send(f"{len(fmt)} commands synced.")
-#     print('Global command tree synced.')
-
-# @bot.command()
-# @commands.is_owner()
-# async def sync(ctx: commands.Context) -> None:
-#     """Sync commands"""
-#     synced = await ctx.bot.tree.sync()
-#     await ctx.send(f"Synced {len(synced)} commands globally")
-
-# @bot.command()
-# @commands.is_owner()
-# async def sync(ctx: commands.Context) -> None:
-#     """Sync commands"""
-#     synced = await tree.sync()
-#     await ctx.send(f"Synced {len(synced)} commands locally.")
-
-# @tree.command(name="global_sync", description="Sync tree across all guilds (Owner Only).")
-# @commands.is_owner()
-# async def global_sync(ctx : discord.Interaction) -> None:
-#     """Sync tree across all guilds (Owner Only)."""
-#     await ctx.response.defer()  # Acknowledge the interaction immediately
-#     print("Starting global sync...")
-
-#     #sync to all whitelisted guilds
-#     guilds = [discord.Object(id=x) for x in whitelist]
-#     for guild in guilds:
-#         synced = await tree.sync(guild=guild)
-#         print(f"Synced {len(synced)} commands in guild {guild.id}")
-#         print(f"Synced commands: {[command.name for command in synced]}")
-
-#     print(f"Global sync complete. Synced {len(synced)} commands.")
-#     await ctx.followup.send(f"Synced {len(synced)} commands globally.")
-
+# see https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html for usage of this command
+# it is generally enough to run $sync and then $sync *
 @bot.command()
 @commands.guild_only()
 @commands.is_owner()
@@ -331,7 +285,7 @@ async def status(ctx : discord.Interaction) -> None:
     state = State(bot, ctx, ctx.channel)
 
     async with bot.pool.acquire() as con:
-        current_player = await con.fetch('SELECT * FROM data WHERE id = $1', ctx.channel)
+        current_player = await con.fetch('SELECT * FROM data WHERE name = $1', ctx.channel)
         current_player = current_player[0] if current_player else None
 
         if not current_player:
