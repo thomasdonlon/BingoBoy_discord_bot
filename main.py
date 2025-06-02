@@ -184,21 +184,21 @@ async def sync(ctx: commands.Context) -> None:
 @tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
 @run_with_error_handling
-async def init_channel(ctx : discord.Interaction):
+async def init_channel(ctx : discord.Interaction) -> None:
     await player.init(State(bot, ctx, ctx.channel))
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
 
 @tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
 @run_with_error_handling
-async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str | int):
+async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str | int) -> None:
     async with bot.pool.acquire() as con:
         await con.execute(f"UPDATE data SET {parameter_name} = '{value}' WHERE name = '{player}'")
     await ctx.response.send_message(f"Value override successful.", ephemeral=True)
 
 @tree.command(name="start_status_display", description="Starts the game status tracker in this channel (Admin Only).")
 @run_with_error_handling
-async def start_status_display(ctx : discord.Interaction):
+async def start_status_display(ctx : discord.Interaction) -> None:
     global display_running
     if not display_running:
         display_running = True
@@ -209,7 +209,7 @@ async def start_status_display(ctx : discord.Interaction):
 
 @tree.command(name="stop_status_display", description="Stops the game status tracker (Admin Only).")
 @run_with_error_handling
-async def stop_status_display(ctx : discord.Interaction):
+async def stop_status_display(ctx : discord.Interaction) -> None:
     global display_running
     if display_running:
         display_running = False
@@ -224,7 +224,7 @@ async def stop_status_display(ctx : discord.Interaction):
 
 @tree.command(name="quest", description="Manages a quest.")
 @run_with_error_handling
-async def quest(ctx : discord.Interaction, action : str, difficulty : str = None):
+async def quest(ctx : discord.Interaction, action : str, difficulty : str = None) -> None:
     state = State(bot, ctx, ctx.channel)
 
     #check if the action is valid
@@ -268,14 +268,14 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
 
 @tree.command(name="sidequest", description="Completes a sidequest.")
 @run_with_error_handling
-async def sidequest(ctx : discord.Interaction):
+async def sidequest(ctx : discord.Interaction) -> None:
     state = State(bot, ctx, ctx.channel)
     await player.complete_sidequest(state)
     #await ctx.response.send_message("Sidequest completed!", ephemeral=True)
 
 @tree.command(name="status", description="Shows your current status.")
 @run_with_error_handling
-async def status(ctx : discord.Interaction):
+async def status(ctx : discord.Interaction) -> None:
     state = State(bot, ctx, ctx.channel)
 
     async with bot.pool.acquire() as con:
@@ -306,7 +306,7 @@ async def status(ctx : discord.Interaction):
 
 @tree.command(name="task", description="Log the completion of a task.")
 @run_with_error_handling
-async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = None):
+async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = None) -> None:
 
     state = State(bot, ctx, ctx.channel)
 
@@ -364,7 +364,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 
 @tree.command(name="skill", description="Level up a skill.")
 @run_with_error_handling
-async def skill(ctx : discord.Interaction, skill_name : str, number : int):
+async def skill(ctx : discord.Interaction, skill_name : str, number : int) -> None:
     #check if the skill name is valid
     if skill_name not in ('strength', 'agility', 'wisdom'):
         await ctx.response.send_message("Error: Invalid skill name. Must be 'strength', 'agility', or 'wisdom'.", ephemeral=True)
@@ -381,7 +381,7 @@ async def skill(ctx : discord.Interaction, skill_name : str, number : int):
 
 @tree.command(name="item", description="Buy an item from the shop.")
 @run_with_error_handling
-async def item(ctx : discord.Interaction, item_name : str):
+async def item(ctx : discord.Interaction, item_name : str) -> None:
     state = State(bot, ctx, ctx.channel)
     await player.buy_item(state, item_name) #this function handles all the purchase logic and checks for valid inputs, etc.
     
