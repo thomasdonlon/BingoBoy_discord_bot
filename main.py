@@ -166,8 +166,8 @@ async def override(ctx : discord.Interaction, player : str, parameter_name : str
 @bot.slash_command(name="start_status_display", description="Starts the game status tracker in this channel.")
 @run_with_error_handling
 async def start_status_display(ctx : discord.Interaction):
+    global display_running
     if not display_running:
-        global display_running
         display_running = True
         await ctx.response.send_message(f"Status display started.", ephemeral=True)
         display_player_status.start()
