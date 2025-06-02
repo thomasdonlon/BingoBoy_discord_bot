@@ -54,7 +54,7 @@ async def read_quest_from_db(state): #load in quest from db after saving it
 #---------------------------------------
 
 class Quest:
-	def __init__(self, difficulty):
+	def __init__(self, state, difficulty):
 		self.name = None
 		self.difficulty = difficulty #str, 'easy', 'medium' or 'hard'
 		self.current_step_num = 0
@@ -64,7 +64,7 @@ class Quest:
 		self.current_step_num_deb_tasks = None
 		self.text_log = [] #holds previous AI text for context
 
-		self.start_quest()
+		self.start_quest(state)
 		self.write_quest_to_db()
 
 	@classmethod
