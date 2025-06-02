@@ -162,11 +162,18 @@ async def on_guild_remove(guild:discord.Guild):
 #     await ctx.send(f"{len(fmt)} commands synced.")
 #     print('Global command tree synced.')
 
+# @bot.command()
+# @commands.is_owner()
+# async def sync(ctx: commands.Context) -> None:
+#     """Sync commands"""
+#     synced = await ctx.bot.tree.sync()
+#     await ctx.send(f"Synced {len(synced)} commands globally")
+
 @bot.command()
 @commands.is_owner()
 async def sync(ctx: commands.Context) -> None:
     """Sync commands"""
-    synced = await ctx.bot.tree.sync()
+    synced = await bot.tree.sync()
     await ctx.send(f"Synced {len(synced)} commands globally")
 
 #--------------------------------------
@@ -188,7 +195,7 @@ async def override(ctx : discord.Interaction, player : str, parameter_name : str
         await con.execute(f"UPDATE data SET {parameter_name} = '{value}' WHERE name = '{player}'")
     await ctx.response.send_message(f"Value override successful.", ephemeral=True)
 
-@bot.slash_command(name="start_status_display", description="Starts the game status tracker in this channel.")
+@bot.slash_command(name="start_status_display", description="Starts the game status tracker in this channel (Admin Only).")
 @run_with_error_handling
 async def start_status_display(ctx : discord.Interaction):
     global display_running
@@ -199,7 +206,7 @@ async def start_status_display(ctx : discord.Interaction):
     else:
         await ctx.response.send_message(f"Status display is already running.", ephemeral=True)
 
-@bot.slash_command(name="stop_status_display", description="Stops the game status tracker.")
+@bot.slash_command(name="stop_status_display", description="Stops the game status tracker (Admin Only).")
 @run_with_error_handling
 async def stop_status_display(ctx : discord.Interaction):
     global display_running
