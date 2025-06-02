@@ -28,6 +28,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='$', intents=intents)
+tree = bot.tree
 
 #--------------------------------------
 # HELPERS/CONVENIENCE
@@ -173,7 +174,7 @@ async def on_guild_remove(guild:discord.Guild):
 @commands.is_owner()
 async def sync(ctx: commands.Context) -> None:
     """Sync commands"""
-    synced = await bot.tree.sync()
+    synced = await tree.sync()
     await ctx.send(f"Synced {len(synced)} commands globally")
 
 #--------------------------------------
