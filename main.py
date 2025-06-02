@@ -2,13 +2,13 @@
 
 #TODO: generalize error handling throughout this whole package
 
-import os, json, logging, asyncpg, asyncio
+import os, logging, asyncpg
 import player
 from quest import format_quest_status, Quest
 from text_storage import get_item_name
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import app_commands, commands, tasks, tree
 import openai
 
 
@@ -20,6 +20,7 @@ PG_HOST =               os.getenv('PGHOST')
 PG_PORT =               os.getenv('PGPORT')
 PG_DB =                 os.getenv('PGPDATABASE')
 
+test_guild_id = 1371909216138166474  #ID of the test server, which can be used to globally sync commands
 whitelist = (1371909216138166474,)  #currently only whitelisting the test server, add more IDs as needed
 summary_channel_id = 1373405473209847949  #channel ID for the bot status display, where the bot will post the player status updates
 
@@ -184,6 +185,18 @@ async def stop_status_display(ctx : discord.Interaction):
         display_player_status.stop()
     else:
         await ctx.response.send_message(f"Status display is not running.", ephemeral=True)
+
+@bot.tree.command(name='sync', description='Owner only')
+@commands.is_owner()
+@run_with_error_handling
+async def sync(interaction: discord.Interaction):
+    await tree.sync()
+    print('Global command tree synced.')
+
+@app_commands.guilds(discord.Object(id = test_guild_id))
+@run_with_error_handling
+async def sync_guild(interaction: discord.Interaction):
+    await self.tree.sync(guild=discord.Object(id=test_guild_id))
 
 #--------------------------------------
 # PLAYER COMMANDS
