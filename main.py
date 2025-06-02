@@ -184,7 +184,6 @@ async def sync(ctx: commands.Context) -> None:
 
 @tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
-@run_with_error_handling
 async def init_channel(ctx : discord.Interaction) -> None:
     await player.init(State(bot, ctx, ctx.channel))
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
