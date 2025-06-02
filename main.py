@@ -176,7 +176,7 @@ async def on_guild_remove(guild:discord.Guild):
 async def sync(ctx: commands.Context) -> None:
     """Sync commands"""
     synced = await tree.sync()
-    await ctx.send(f"Synced {len(synced)} commands globally")
+    await ctx.send(f"Synced {len(synced)} commands locally.")
 
 @tree.command(name="global_sync", description="Sync tree across all guilds (Owner Only).")
 @commands.is_owner()
@@ -185,9 +185,9 @@ async def global_sync(ctx : discord.Interaction) -> None:
     await ctx.response.defer()  # Acknowledge the interaction immediately
     print("Starting global sync...")
 
-    # Sync the command tree globally
-    synced = await tree.sync()
-    #await ctx.response.send_message(f"Synced {len(synced)} commands globally.")
+    #sync to all whitelisted guilds
+    guilds = [discord.Object(id=x) for x in whitelist]
+    synced = await ctx.bot.tree.sync(guild=guilds)
 
     print(f"Global sync complete. Synced {len(synced)} commands.")
     await ctx.followup.send(f"Synced {len(synced)} commands globally.")
