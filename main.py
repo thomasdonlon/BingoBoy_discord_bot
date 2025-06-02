@@ -189,7 +189,7 @@ async def global_sync(ctx : discord.Interaction) -> None:
     guilds = [discord.Object(id=x) for x in whitelist]
     for guild in guilds:
         synced = await tree.sync(guild=guild)
-        print(f"Synced {len(synced)} commands in guild {guild.id} ({guild.name})")
+        print(f"Synced {len(synced)} commands in guild {guild.id})")
         print(f"Synced commands: {[command.name for command in synced]}")
 
     print(f"Global sync complete. Synced {len(synced)} commands.")
