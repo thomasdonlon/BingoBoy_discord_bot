@@ -143,7 +143,7 @@ class Quest:
 	async def progress_quest(self, state): #progress the quest, incrementing the step number and generating new tasks if needed
 		                                   #xp and rewards will be handled in the main.py part of things
 		if self.current_step_num >= self.total_step_number:
-			await state.ctx.reply("Error: Cannot progress quest, already completed.")
+			await state.ctx.response.send_message("Error: Cannot progress quest, already completed.")
 			print("Error: Cannot progress quest, already at maximum step number.")
 			return
 		
@@ -153,19 +153,19 @@ class Quest:
 			tmp_difficulty = self.difficulty  # Store the current difficulty before resetting
 			await self.reset_quest_in_db(state)
 			if self.difficulty == 'drunken-dragon':
-				await state.ctx.reply("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
+				await state.ctx.response.send_message("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
 			else:
-				await state.ctx.reply(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
+				await state.ctx.response.send_message(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
 			return tmp_difficulty
 		else:
 			self.generate_new_tasks(state)
 			await self.write_quest_to_db(state)
-			await state.ctx.reply(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{self.name}'.")
+			await state.ctx.response.send_message(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{self.name}'.")
 		return
 
 	async def abandon_quest(self, state): #abandon the quest, resetting it in the database
 		await self.reset_quest_in_db(state)
-		await state.ctx.reply("You have abandoned the quest. You may start a new one at any time.")
+		await state.ctx.response.send_message("You have abandoned the quest. You may start a new one at any time.")
 
 	#---------------------------------------
 	# Wrapper for ChatGPT Interaction 
@@ -190,7 +190,7 @@ class Quest:
 			)
 		
 		#send the quest message to the player
-		await state.ctx.reply(quest_message)
+		await state.ctx.response.send_message(quest_message)
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)

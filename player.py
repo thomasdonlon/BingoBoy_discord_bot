@@ -121,13 +121,13 @@ async def remove_task(state, task_name):
 	async with state.bot.pool.acquire() as con:
 		await con.execute(f"UPDATE data SET last_logged_task = '' WHERE name = '{state.player}'")
 	
-	await state.ctx.reply(f"Removed task: {task_name}")
+	await state.ctx.response.send_message(f"Removed task: {task_name}")
 
 async def get_last_logged_task(state):
 	#check if the player has a last logged task
 	last_logged_task = await get_player_x(state, 'last_logged_task')
 	if not last_logged_task:
-		await state.ctx.reply("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.")
+		await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.")
 		return
 
 	return last_logged_task 
@@ -156,12 +156,12 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 	#check that the player has enough skill points
 	current_skill_points = await get_player_x(state, 'skill_points')
 	if (current_skill_points == 0) or (current_skill_points < number):
-		await state.ctx.reply("Error: Not enough skill points in pool.")
+		await state.ctx.response.send_message("Error: Not enough skill points in pool.")
 		return
 
 	#check that the input is valid
 	if skill_name not in ('strength', 's', 'agility', 'a', 'wisdom', 'w'):
-		await state.ctx.reply("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').")
+		await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').")
 		return
 
 	#clean input
@@ -180,13 +180,13 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 	}
 	old_skill_level = await get_player_x(state, f"{skill_name}_level")
 	new_skill_level = await increment_player_x(state, f"{skill_name}_level", number)
-	await state.ctx.reply(f"Your party grows {output_dict[skill_name]}.")
+	await state.ctx.response.send_message(f"Your party grows {output_dict[skill_name]}.")
 
 	#if the skill level crossed one or more thresholds, display the descriptions for the new skills
 	for threshold in skill_level_thresholds:
 		if old_skill_level < threshold <= new_skill_level:
 			skill_description = skill_level_thresholds[threshold]
-			await state.ctx.reply(f"You have reached {skill_name} level {threshold}! New skill unlocked:\n{skill_description}")
+			await state.ctx.response.send_message(f"You have reached {skill_name} level {threshold}! New skill unlocked:\n{skill_description}")
 
 	#decrement the skill points
 	await set_player_x(state, 'skill_points', current_skill_points - number)
@@ -200,7 +200,7 @@ async def start_quest(state, difficulty):
 	if difficulty == 'drunken-dragon':
 		current_level = await get_player_x(state, 'level')
 		if current_level < 10:
-			await state.ctx.reply("Error: You must be at least level 10 to start the Drunken Dragon quest.")
+			await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.")
 			return
 
 	#initialize the quest object and write it to the database
@@ -211,7 +211,7 @@ async def progress_quest(state):
 	#check if the player has a quest
 	current_quest = await get_player_x(state, 'current_quest')
 	if not current_quest:
-		await state.ctx.reply("Error: You do not have an active quest.")
+		await state.ctx.response.send_message("Error: You do not have an active quest.")
 		return
 
 	#read the quest from the database
@@ -224,36 +224,36 @@ async def progress_quest(state):
 	n_deb_tasks_needed = quest.current_step_num_deb_tasks
 	
 	if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
-		await state.ctx.reply("Error: Not enough debauchery tasks available to progress quest.")
+		await state.ctx.response.send_message("Error: Not enough debauchery tasks available to progress quest.")
 		return
 
 	if task_type == 'exploration':
 		if await get_player_x(state, 'exploration_avail') < n_tasks_needed:
-			await state.ctx.reply(f"Error: Not enough exploration tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'exploration_avail')}.")
+			await state.ctx.response.send_message(f"Error: Not enough exploration tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'exploration_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
 	elif task_type == 'combat':
 		if await get_player_x(state, 'combat_avail') < n_tasks_needed:
-			await state.ctx.reply(f"Error: Not enough combat tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'combat_avail')}.")
+			await state.ctx.response.send_message(f"Error: Not enough combat tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'combat_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'combat_avail', -n_tasks_needed)
 	elif task_type == 'puzzle':
 		if await get_player_x(state, 'puzzle_avail') < n_tasks_needed:
-			await state.ctx.reply(f"Error: Not enough puzzle tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'puzzle_avail')}.")
+			await state.ctx.response.send_message(f"Error: Not enough puzzle tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'puzzle_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
 	elif task_type == 'dialogue':
 		if await get_player_x(state, 'dialogue_avail') < n_tasks_needed:
-			await state.ctx.reply(f"Error: Not enough dialogue tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'dialogue_avail')}.")
+			await state.ctx.response.send_message(f"Error: Not enough dialogue tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'dialogue_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
 	elif task_type == 'drunken-dragon':
 		if (await get_player_x(state, 'exploration_avail') < n_tasks_needed) or (await get_player_x(state, 'combat_avail') < n_tasks_needed) or (await get_player_x(state, 'puzzle_avail') < n_tasks_needed) or (await get_player_x(state, 'dialogue_avail') < n_tasks_needed):
-			await state.ctx.reply(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
+			await state.ctx.response.send_message(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
 			return
 	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) #have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
 
@@ -281,7 +281,7 @@ async def abandon_quest(state):
 	#check if the player has a quest
 	current_quest = await get_player_x(state, 'current_quest')
 	if not current_quest:
-		await state.ctx.reply("Error: You do not have an active quest.")
+		await state.ctx.response.send_message("Error: You do not have an active quest.")
 		return
 
 	#abandon the quest
@@ -291,10 +291,10 @@ async def abandon_quest(state):
 async def complete_sidequest(state, type):
 	#check if the player has enough banked tasks to complete the sidequest
 	if await get_player_x(state, 'debauchery_avail') < 1:
-		await state.ctx.reply("Error: Not enough debauchery tasks available to complete sidequest.")
+		await state.ctx.response.send_message("Error: Not enough debauchery tasks available to complete sidequest.")
 		return
 	if await get_player_x(state, f"{type}_avail") < 3:
-		await state.ctx.reply(f"Error: Not enough {type} tasks available to complete sidequest.")
+		await state.ctx.response.send_message(f"Error: Not enough {type} tasks available to complete sidequest.")
 		return
 	
 	#generate the quest message
@@ -303,7 +303,7 @@ async def complete_sidequest(state, type):
 	)
 	
 	#send the quest message to the player
-	await state.ctx.reply(sidequest_message)
+	await state.ctx.response.send_message(sidequest_message)
 
 	#do the actual machinery of completing the sidequest
 	await increment_player_x(state, 'sidequest', 1)
@@ -318,32 +318,32 @@ async def buy_item(state, item_id):
 	try:
 		item_id[0] = item_id[0].lower()  #ensure the first letter is lowercase
 	except Exception as e:
-		await state.ctx.reply("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
+		await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
 		print(f"ERROR buy_item PLAYER: {state.player} THREW: {e}")
 		return
 
 	#check that the item id has the correct format
 	if item_id[0] not in ('e', 'm', 'h'):
-		await state.ctx.reply("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
+		await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
 		return
 
 	#check if the player has enough item points for that tier of item
 	if item_id[0] == 'e':
 		if await get_player_x(state, 'easy_quest_points') < 1:
-			await state.ctx.reply("Error: Not enough easy quest points to buy this item.")
+			await state.ctx.response.send_message("Error: Not enough easy quest points to buy this item.")
 			return
 	elif item_id[0] == 'm':
 		if await get_player_x(state, 'medium_quest_points') < 1:
-			await state.ctx.reply("Error: Not enough medium quest points to buy this item.")
+			await state.ctx.response.send_message("Error: Not enough medium quest points to buy this item.")
 			return
 	elif item_id[0] == 'h':
 		if await get_player_x(state, 'hard_quest_points') < 1:
-			await state.ctx.reply("Error: Not enough hard quest points to buy this item.")
+			await state.ctx.response.send_message("Error: Not enough hard quest points to buy this item.")
 			return
 
 	#check if the player already has that item 
 	if await inventory_contains(state, item_id):
-		await state.ctx.reply("Error: You already have this item.")
+		await state.ctx.response.send_message("Error: You already have this item.")
 		return
 
 	#add the item to the player's inventory
@@ -361,5 +361,5 @@ async def buy_item(state, item_id):
 		await increment_player_x(state, 'medium_quest_points', -1)
 	elif item_id[0] == 'h':
 		await increment_player_x(state, 'hard_quest_points', -1)
-	await state.ctx.reply(f"You have purchased {get_item_name(item_id)}.")
+	await state.ctx.response.send_message(f"You have purchased {get_item_name(item_id)}.")
 

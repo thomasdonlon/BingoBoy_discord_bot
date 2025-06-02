@@ -257,7 +257,7 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         else:
             #invalid difficulty
             print(f"ERROR start_quest PLAYER: {state.player} THREW: Invalid quest difficulty: {difficulty}")
-            await state.ctx.reply("Error: Invalid quest difficulty. Must be 'easy', 'medium', or 'hard'.")
+            await state.ctx.response.send_message("Error: Invalid quest difficulty. Must be 'easy', 'medium', or 'hard'.")
             return
 
         await player.start_quest(state, difficulty)
@@ -291,13 +291,13 @@ async def status(ctx : discord.Interaction) -> None:
         if not current_player:
             return
 
-    embed = discord.Embed(title=f"{current_player['name']}'", color=discord.Color.green())
+    embed = discord.Embed(title=f"{current_player['name']}", color=discord.Color.green())
     embed.add_field(name="Level", value=current_player['level'], inline=True)
     embed.add_field(name="XP", value=current_player['xp'], inline=True)
     embed.add_field(name="Strength", value=current_player['strength_level'], inline=True)
     embed.add_field(name="Agility", value=current_player['agility_level'], inline=True)
     embed.add_field(name="Wisdom", value=current_player['wisdom_level'], inline=True)
-    embed.add_field(name="Skill Points", value=current_player['skill_points'], inline=True)
+    embed.add_field(name="Skill Points", value=current_player['skill_points'], inline=False)
     embed.add_field(name="Quests", value=f"Easy: {current_player['easy_quest']}, Medium: {current_player['medium_quest']}, Hard: {current_player['hard_quest']}", inline=False)
     embed.add_field(name="Item Points:", value=f"Easy: {current_player['easy_quest_points']}, Medium: {current_player['medium_quest_points']}, Hard: {current_player['hard_quest_points']}", inline=False)
     current_quest = await Quest.from_state(state) if current_player['current_quest'] else None
