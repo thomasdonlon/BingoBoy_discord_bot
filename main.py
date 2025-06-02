@@ -191,7 +191,7 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
 @tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
 async def init_channel(ctx : discord.Interaction) -> None:
-    await player.init(State(bot, ctx, ctx.channel))
+    await player.init(State(bot, ctx, ctx.channel.name))
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
 
 @run_with_error_handling
@@ -231,7 +231,7 @@ async def stop_status_display(ctx : discord.Interaction) -> None:
 @run_with_error_handling
 @tree.command(name="quest", description="Manages a quest.")
 async def quest(ctx : discord.Interaction, action : str, difficulty : str = None) -> None:
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
 
     #check if the action is valid
     if action not in ('start', 'progress', 'abandon'):
@@ -275,14 +275,14 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
 @run_with_error_handling
 @tree.command(name="sidequest", description="Completes a sidequest.")
 async def sidequest(ctx : discord.Interaction) -> None:
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
     await player.complete_sidequest(state)
     #await ctx.response.send_message("Sidequest completed!", ephemeral=True)
 
 @run_with_error_handling
 @tree.command(name="status", description="Shows your current status.")
 async def status(ctx : discord.Interaction) -> None:
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
 
     async with bot.pool.acquire() as con:
         current_player = await con.fetch('SELECT * FROM data WHERE name = $1', ctx.channel)
@@ -314,7 +314,7 @@ async def status(ctx : discord.Interaction) -> None:
 @tree.command(name="task", description="Log the completion of a task.")
 async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = None) -> None:
 
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
 
     #if task_name is 'undo', remove the last task logged or look for a specific task to remove
     if task_name == 'undo':
@@ -381,13 +381,13 @@ async def skill(ctx : discord.Interaction, skill_name : str, number : int) -> No
         await ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
         return
 
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
     await player.allocate_skill_points(state, skill_name, number)
     
 @run_with_error_handling
 @tree.command(name="item", description="Buy an item from the shop.")
 async def item(ctx : discord.Interaction, item_name : str) -> None:
-    state = State(bot, ctx, ctx.channel)
+    state = State(bot, ctx, ctx.channel.name)
     await player.buy_item(state, item_name) #this function handles all the purchase logic and checks for valid inputs, etc.
     
 #--------------------------------------

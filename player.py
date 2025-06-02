@@ -34,7 +34,7 @@ async def init(state):
 				)''')
 
 		# #set default values #no longer needed, now done in the table creation
-		# await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
+		await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
 		# await con.execute(f'INSERT INTO data(level) VALUES(1) ON CONFLICT DO NOTHING')
 		# await con.execute(f'INSERT INTO data(xp) VALUES(0) ON CONFLICT DO NOTHING')
 		# await con.execute(f'INSERT INTO data(easy_quest) VALUES(0) ON CONFLICT DO NOTHING')
