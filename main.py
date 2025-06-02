@@ -183,7 +183,7 @@ async def sync(ctx: commands.Context) -> None:
 async def global_sync(ctx : discord.Interaction) -> None:
     """Sync tree across all guilds (Owner Only)."""
     synced = await tree.sync()
-    await ctx.response.send(f"Synced {len(synced)} commands globally")
+    await ctx.response.send_message(f"Synced {len(synced)} commands globally.")
 
 #--------------------------------------
 # ADMIN COMMANDS/TOOLS
