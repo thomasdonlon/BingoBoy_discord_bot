@@ -8,7 +8,7 @@ from quest import format_quest_status, Quest
 from text_storage import get_item_name
 
 import discord
-from discord.ext import commands, tasks, tree
+from discord.ext import commands, tasks
 import openai
 
 
@@ -149,7 +149,7 @@ async def on_guild_remove(guild:discord.Guild):
 @commands.is_owner()
 @run_with_error_handling
 async def sync(interaction: discord.Interaction):
-    await tree.sync()
+    await bot.tree.sync()
     print('Global command tree synced.')
 
 @discord.app_commands.guilds(discord.Object(id = test_guild_id))
