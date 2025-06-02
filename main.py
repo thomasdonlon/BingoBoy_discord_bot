@@ -125,7 +125,7 @@ async def on_ready():
     #and an arbitrary number of task columns that can be added later
     async with bot.pool.acquire() as con:   
         await con.execute(f'''CREATE TABLE IF NOT EXISTS tasks (
-            name				  VARCHAR '' PRIMARY KEY NOT NULL
+            name				  VARCHAR PRIMARY KEY NOT NULL
             )''')
     
 @bot.event
