@@ -165,7 +165,7 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
 
 def sidequest_ai_prompt(type):
     prompt = base_ai_prompt + \
-    f"You are currently generating a sidequest for the player to complete. " \
+    f"You are currently generating a short sidequest for the player to complete. " \
     f"A sidequest consist of a single task that the player have completed in order to progress. They are self-contained and do not leave cliffhangers. " \
     f"The content of your response should be roughly 3 sentences long. " \
     f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed. " \

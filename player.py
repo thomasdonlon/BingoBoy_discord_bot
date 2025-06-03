@@ -140,9 +140,15 @@ async def award_xp(state, xp_amount):
 		current_xp = await increment_player_x(state, 'xp', xp_amount)
 
 		#level up if you hit an xp threshold
-		for threshold in xp_level_thresholds: #this may look silly but it automatically catches multiple level ups from one xp drop
+		for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
 			if current_xp - xp_amount < threshold < current_xp:
 				await level_up(state)
+
+		#print an xp award message
+		try: #try a deferred context response (it generally should be -- this will mostly be called by quest or sidequest, which are deferred)
+			await state.ctx.followup.send(f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
+		except Exception as e: #if the deferred response fails, send a regular interaction message instead
+			await state.ctx.response.send_message(f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
 
 async def level_up(state):
 	await increment_player_x(state, 'level', 1)
@@ -309,6 +315,8 @@ async def complete_sidequest(state, task_type):
 	await increment_player_x(state, f"{task_type}_avail", -3)
 	await increment_player_x(state, 'debauchery_avail', -1)
 	await award_xp(state, 10*(await get_player_x(state, 'sidequest')))  #10 xp per sidequest, scaling with number of sidequests completed
+
+	await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
 
 #----------------------------------
 # Items
