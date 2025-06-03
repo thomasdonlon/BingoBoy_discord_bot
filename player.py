@@ -3,7 +3,7 @@
 from quest import Quest
 import conversation
 from text_storage import xp_level_thresholds, skill_level_thresholds, sidequest_ai_prompt
-from utils import get_item_name, ctx_print
+from utils import get_item_name, ctx_print, get_skill_description
 
 #initialize the channel/player
 async def init(state):
@@ -145,13 +145,13 @@ async def award_xp(state, xp_amount):
 				await level_up(state)
 
 		#print an xp award message
-		await ctx_print(f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
+		await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
 
 async def level_up(state):
 	await increment_player_x(state, 'level', 1)
 	await increment_player_x(state, 'skill_points', await get_player_x(state, 'level'))
 
-	await ctx_print(f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
+	await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
 
 #----------------------------------
 # Skills
@@ -185,16 +185,16 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 	}
 	old_skill_level = await get_player_x(state, f"{skill_name}_level")
 	new_skill_level = await increment_player_x(state, f"{skill_name}_level", number)
-	await state.ctx.response.send_message(f"Your party grows {output_dict[skill_name]}.")
+	await state.ctx.response.send_message(f"You have reached {skill_name} level {new_skill_level}! Your party grows {output_dict[skill_name]}.")
 
 	#if the skill level crossed one or more thresholds, display the descriptions for the new skills
 	for threshold in skill_level_thresholds:
 		if old_skill_level < threshold <= new_skill_level:
-			skill_description = skill_level_thresholds[threshold]
-			await ctx_print(f"You have reached {skill_name} level {threshold}! New skill unlocked:\n{skill_description}")
+			skill_description = get_skill_description(threshold)
+			await ctx_print(state, f"New skill unlocked:\n{skill_description}")
 
 	#decrement the skill points
-	await set_player_x(state, 'skill_points', current_skill_points - number)
+	await increment_player_x(state, 'skill_points', -number)
 
 #----------------------------------
 # Questing
