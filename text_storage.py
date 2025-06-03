@@ -217,14 +217,9 @@ def sanitize_text(text):
     """
     Cleans the text to remove any naughty SQL characters. This also prevents the chatgpt output from breaking the SQL query.
     """
-    #replace any double quotes with single quotes
-    text = text.replace('"', "'")
-
-    #sometimes chatgpt likes to use two single quotes in a row, which breaks the SQL query
-    text = text.replace("''", "'")
 
     #remove any naughty characters that could be used for SQL injection or other nefarious purposes
-    naughty_strings = [':', ';', '\\', '-', '(', ')', '[', ']', '{', '}', '<', '>', '=', '!', '@', '#', '$', '%', '^', '&', '*', '+', '/', '|']
+    naughty_strings = ["'", '"', ':', ';', '\\', '-', '(', ')', '[', ']', '{', '}', '<', '>', '=', '!', '@', '#', '$', '%', '^', '&', '*', '+', '/', '|']
 
     for naughty in naughty_strings:
         text = text.replace(naughty, '')

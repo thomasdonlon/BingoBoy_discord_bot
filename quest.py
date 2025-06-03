@@ -178,7 +178,8 @@ class Quest:
 	async def progress_quest_message(self, state):
 		#get a name for the quest
 		if self.difficulty == 'drunken-dragon':
-			self.name = "The Drunken Dragon"
+			if self.current_step_num == 0:
+				self.name = "The Drunken Dragon"
 
 			#generate the quest message
 			quest_message = await conversation.ai_get_response(
