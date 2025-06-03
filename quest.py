@@ -12,10 +12,10 @@ from utils import sanitize_text, replace_text_codes
 def format_quest_status(quest):
 	#format the quest status for display
 	#this is used in the quest status command to show the current quest status to the player
-	return f"{replace_text_codes(quest.name)}: Difficulty: {quest.difficulty}, " \
-		   f"Step {quest.current_step_num + 1}/{quest.total_step_number}, " \
+	return f"{replace_text_codes(quest.name)}:\nDifficulty: {quest.difficulty}\n" \
+		   f"Step {quest.current_step_num + 1}/{quest.total_step_number}\n" \
 		   f"Need {quest.current_step_num_tasks} {quest.current_step_type} tasks " \
-		   f"and {quest.current_step_num_deb_tasks} Debauchery tasks."
+		   f"and {quest.current_step_num_deb_tasks} Debauchery task(s)."
 
 #---------------------------------------
 # Reading/Writing
@@ -134,8 +134,13 @@ class Quest:
 			return
 		
 		self.current_step_num += 1
+		await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{replace_text_codes(self.name)}'!")
+		
+		#we run these either way
+		self.generate_new_tasks(state) #has to run before progress_quest_message
 		await self.progress_quest_message(state)
-		if self.current_step_num == self.total_step_number:
+
+		if self.current_step_num == self.total_step_number: #quest is finished
 			tmp_difficulty = self.difficulty  # Store the current difficulty before resetting
 			await self.reset_quest_in_db(state)
 			if self.difficulty == 'drunken-dragon':
@@ -143,10 +148,8 @@ class Quest:
 			else:
 				await state.ctx.followup.send(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
 			return tmp_difficulty
-		else:
-			self.generate_new_tasks(state)
+		else: #quest is not finished yet
 			await self.write_quest_to_db(state)
-			await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{self.name}'.")
 		return
 
 	async def abandon_quest(self, state): #abandon the quest, resetting it in the database
@@ -179,10 +182,16 @@ class Quest:
 		quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
 		
 		#send the quest message to the player
-		await state.ctx.followup.send(replace_text_codes(self.name) + \
-								      f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n' + \
-									  replace_text_codes(quest_message) + \
-									  f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).')
+		out_text = replace_text_codes(self.name)
+		if self.current_step_num == self.total_step_number:
+			out_text += f'Quest completed!\n\n'
+		else:
+			out_text += f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n'
+		out_text += replace_text_codes(quest_message)
+		if self.current_step_num < self.total_step_number:
+			out_text += f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).'
+
+		await state.ctx.followup.send(out_text)
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)

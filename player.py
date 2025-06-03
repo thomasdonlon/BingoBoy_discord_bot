@@ -137,8 +137,7 @@ async def get_last_logged_task(state):
 # Leveling
 #----------------------------------
 async def award_xp(state, xp_amount):
-		current_xp = await get_player_x(state, 'xp')
-		current_xp += xp_amount
+		current_xp = await increment_player_x(state, 'xp', xp_amount)
 
 		#level up if you hit an xp threshold
 		for threshold in xp_level_thresholds: #this may look silly but it automatically catches multiple level ups from one xp drop

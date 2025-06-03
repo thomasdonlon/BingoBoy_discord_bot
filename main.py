@@ -1,6 +1,8 @@
 #central functionality of the bot, plus front-end command control
 
-#TODO: generalize error handling throughout this whole package
+#TODO: stop players from logging tasks if they have 5 completions of that task already
+#TODO: add a way to reset the game (clear all player data, etc)
+#TODO: add name of character, and use channel id to track player data rather than using channel name as player name
 
 import os, logging, asyncpg
 import player
@@ -295,6 +297,7 @@ async def status(ctx : discord.Interaction) -> None:
     embed = discord.Embed(title=f"{current_player['name']}", color=discord.Color.green())
     embed.add_field(name="Level", value=current_player['level'], inline=True)
     embed.add_field(name="XP", value=current_player['xp'], inline=True)
+    embed.add_field(name="\u200b", value="\u200b", inline=True) #workaround for inline spacing
     embed.add_field(name="Strength", value=current_player['strength_level'], inline=True)
     embed.add_field(name="Agility", value=current_player['agility_level'], inline=True)
     embed.add_field(name="Wisdom", value=current_player['wisdom_level'], inline=True)
@@ -307,7 +310,7 @@ async def status(ctx : discord.Interaction) -> None:
     else:
         embed.add_field(name="Current Quest", value="None", inline=False)
     embed.add_field(name="Sidequests", value=current_player['sidequest'], inline=False)
-    embed.add_field(name="Tasks", value=f"Exploration: {current_player['exploration_avail']}\nCombat: {current_player['combat_avail']}\nPuzzle-Solving: {current_player['puzzle_avail']}\nDialogue: {current_player['dialogue_avail']}, \nDebauchery: {current_player['debauchery_avail']}\n", inline=False)
+    embed.add_field(name="Tasks", value=f"Exploration: {current_player['exploration_avail']}\nCombat: {current_player['combat_avail']}\nPuzzle-Solving: {current_player['puzzle_avail']}\nDialogue: {current_player['dialogue_avail']}\nDebauchery: {current_player['debauchery_avail']}\n", inline=False)
     inventory_text = '\n'.join([get_item_name(item) for item in current_player['inventory']]) if current_player['inventory'] else 'Empty'
     embed.add_field(name="Inventory", value=inventory_text, inline=False)
 
