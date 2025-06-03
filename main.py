@@ -259,10 +259,12 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
             await state.ctx.response.send_message("Error: Invalid quest difficulty. Must be 'easy', 'medium', or 'hard'.")
             return
 
+        await state.ctx.response.defer() #this takes a while to interact with chatgpt
         await player.start_quest(state, difficulty)
     
     elif action == 'progress':
         #progress the quest
+        await state.ctx.response.defer() #this takes a while to interact with chatgpt
         progress_result = await player.progress_quest(state) #is only not None if the quest is completed
         if progress_result == 'drunken-dragon':
             end_game(ctx.channel)

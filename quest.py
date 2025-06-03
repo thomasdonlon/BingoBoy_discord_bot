@@ -147,7 +147,7 @@ class Quest:
 	async def progress_quest(self, state): #progress the quest, incrementing the step number and generating new tasks if needed
 		                                   #xp and rewards will be handled in the main.py part of things
 		if self.current_step_num >= self.total_step_number:
-			await state.ctx.response.send_message("Error: Cannot progress quest, already completed.")
+			await state.ctx.followup.send("Error: Cannot progress quest, already completed.")
 			print("Error: Cannot progress quest, already at maximum step number.")
 			return
 		
@@ -157,14 +157,14 @@ class Quest:
 			tmp_difficulty = self.difficulty  # Store the current difficulty before resetting
 			await self.reset_quest_in_db(state)
 			if self.difficulty == 'drunken-dragon':
-				await state.ctx.response.send_message("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
+				await state.ctx.followup.send("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
 			else:
-				await state.ctx.response.send_message(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
+				await state.ctx.followup.send(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
 			return tmp_difficulty
 		else:
 			self.generate_new_tasks(state)
 			await self.write_quest_to_db(state)
-			await state.ctx.response.send_message(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{self.name}'.")
+			await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{self.name}'.")
 		return
 
 	async def abandon_quest(self, state): #abandon the quest, resetting it in the database
@@ -176,7 +176,6 @@ class Quest:
 	#---------------------------------------
 
 	async def progress_quest_message(self, state):
-		await state.ctx.response.defer()
 		#get a name for the quest
 		if self.difficulty == 'drunken-dragon':
 			self.name = "The Drunken Dragon"
@@ -187,7 +186,7 @@ class Quest:
 			)
 		else:
 			if self.current_step_num == 0:  # Only get a name for the quest at the start
-				self.name = await conversation.ai_get_response(quest_name_prompt)
+				self.name = (await conversation.ai_get_response(quest_name_prompt)).replace("'", "") #chatgpt gets apostrophe heavy
 
 			#generate the quest message
 			quest_message = await conversation.ai_get_response(
@@ -197,7 +196,7 @@ class Quest:
 		quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
 		
 		#send the quest message to the player
-		await state.ctx.followup.send(self.name + f': Step {self.current_step_num + 1}/{self.total_step_number}\n' + quest_message + f'\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} Debauchery tasks.')
+		await state.ctx.followup.send(self.name + f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n' + quest_message + f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).')
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)
