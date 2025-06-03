@@ -128,7 +128,7 @@ async def get_last_logged_task(state):
 	#check if the player has a last logged task
 	last_logged_task = await get_player_x(state, 'last_logged_task')
 	if not last_logged_task:
-		await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.")
+		await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.", ephemeral=True)
 		return
 
 	return last_logged_task 
@@ -158,15 +158,20 @@ async def level_up(state):
 #----------------------------------
 async def allocate_skill_points(state, skill_name, number): #TODO: on level up, when they get a new skill, say that they learned a new skill and display that skill's text
 
+	#check if the level is valid
+	if number < 1:
+		await state.ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
+		return
+
 	#check that the player has enough skill points
 	current_skill_points = await get_player_x(state, 'skill_points')
 	if (current_skill_points == 0) or (current_skill_points < number):
-		await state.ctx.response.send_message("Error: Not enough skill points in pool.")
+		await state.ctx.response.send_message("Error: Not enough skill points in pool.", ephemeral=True)
 		return
 
 	#check that the input is valid
 	if skill_name not in ('strength', 's', 'agility', 'a', 'wisdom', 'w'):
-		await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').")
+		await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').", ephemeral=True)
 		return
 
 	#clean input
@@ -205,7 +210,7 @@ async def start_quest(state, difficulty):
 	if difficulty == 'drunken-dragon':
 		current_level = await get_player_x(state, 'level')
 		if current_level < 10:
-			await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.")
+			await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
 			return
 
 	#initialize the quest object (starts the quest and writes it to the database)

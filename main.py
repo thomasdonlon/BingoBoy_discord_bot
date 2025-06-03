@@ -3,6 +3,11 @@
 #TODO: stop players from logging tasks if they have 5 completions of that task already
 #TODO: add a way to reset the game (clear all player data, etc)
 #TODO: add name of character, and use channel id to track player data rather than using channel name as player name
+#TODO: test the display channel functionality
+#TODO: test item buying
+#TODO: don't let the player buy skills above 35
+#TODO: Add skills
+#TODO: add items
 
 import os, logging, asyncpg
 import player
@@ -395,15 +400,6 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 @run_with_error_handling
 @tree.command(name="skill", description="Level up a skill.")
 async def skill(ctx : discord.Interaction, skill_name : str, number : int) -> None:
-    #check if the skill name is valid
-    if skill_name not in ('strength', 'agility', 'wisdom'):
-        await ctx.response.send_message("Error: Invalid skill name. Must be 'strength', 'agility', or 'wisdom'.", ephemeral=True)
-        return
-
-    #check if the level is valid
-    if number < 1:
-        await ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
-        return
 
     state = State(bot, ctx, ctx.channel.name)
     await player.allocate_skill_points(state, skill_name, number)
