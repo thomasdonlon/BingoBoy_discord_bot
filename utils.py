@@ -51,3 +51,9 @@ def get_skill_description(skill, level):
         return skill_level_descriptions[skill][level]
     else:
         return "Unknown Skill Level"
+    
+async def ctx_print(state, text, ephemeral=False):
+    try: #try a deferred context response 
+        await state.ctx.followup.send(text, ephemeral=ephemeral)
+    except Exception as e: #if the deferred response fails, send a regular interaction message instead
+        await state.ctx.response.send_message(text, ephemeral=ephemeral)

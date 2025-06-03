@@ -158,7 +158,7 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
         prompt += f"This is the final step of the quest. Wrap up all content from previous steps. " \
                   f"The content of your response should be roughly 3 sentences long. " \
                   f"The player does not need to complete any additional tasks to finish the quest. " \
-                  f"Provide a reason why the player obtains a magical item as a reward for completing the quest. " \
+                  f"Provide a reason why the player obtains an unspecified magical item as a reward for completing the quest, and why this quest did not solve the grog-drying spell. " \
                   f"The previous text in this quest is provided here: {context}"
     
     return prompt
@@ -168,7 +168,7 @@ def sidequest_ai_prompt(type):
     f"You are currently generating a short sidequest for the player to complete. " \
     f"A sidequest consist of a single task that the player have completed in order to progress. They are self-contained and do not leave cliffhangers. " \
     f"The content of your response should be roughly 3 sentences long. " \
-    f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed. " \
+    f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed, and a reason why the grog-drying spell is not fixed. " \
     f"This sidequest is focused on {type}. " \
     
     return prompt
