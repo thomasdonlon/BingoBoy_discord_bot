@@ -335,7 +335,7 @@ async def status(ctx : discord.Interaction) -> None:
         embed.add_field(name="Current Quest", value="None", inline=False)
     embed.add_field(name="Sidequests", value=current_player['sidequest'], inline=False)
     embed.add_field(name="Tasks", value=f"Exploration: {current_player['exploration_avail']}\nCombat: {current_player['combat_avail']}\nPuzzle-Solving: {current_player['puzzle_avail']}\nDialogue: {current_player['dialogue_avail']}\nDebauchery: {current_player['debauchery_avail']}\n", inline=False)
-    inventory_text = '\n'.join([get_item_name(item) for item in current_player['inventory'].split(',')]) if current_player['inventory'] else 'Empty'
+    inventory_text = '\n'.join([get_item_name(item).split(':')[0] for item in current_player['inventory'].split(',')]) if current_player['inventory'] else 'Empty'
     embed.add_field(name="Inventory", value=inventory_text, inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
