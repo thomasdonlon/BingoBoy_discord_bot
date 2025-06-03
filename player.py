@@ -326,12 +326,7 @@ async def complete_sidequest(state, task_type):
 # Items
 #----------------------------------
 async def buy_item(state, item_id):
-	try:
-		item_id[0] = item_id[0].lower()  #ensure the first letter is lowercase
-	except Exception as e:
-		await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
-		print(f"ERROR buy_item PLAYER: {state.player} THREW: {e}")
-		return
+	item_id = item_id.lower()  #ensure the first letter is lowercase
 
 	#check that the item id has the correct format
 	if item_id[0] not in ('e', 'm', 'h'):
