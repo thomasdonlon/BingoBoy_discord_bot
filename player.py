@@ -210,7 +210,7 @@ async def progress_quest(state):
 	#check if the player has a quest
 	current_quest = await get_player_x(state, 'current_quest')
 	if not current_quest:
-		await state.ctx.response.send_message("Error: You do not have an active quest.")
+		await state.ctx.followup.send("Error: You do not have an active quest.")
 		return
 
 	#read the quest from the database
@@ -223,36 +223,36 @@ async def progress_quest(state):
 	n_deb_tasks_needed = quest.current_step_num_deb_tasks
 	
 	if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
-		await state.ctx.response.send_message("Error: Not enough debauchery tasks available to progress quest.")
+		await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
 		return
 
 	if task_type == 'exploration':
 		if await get_player_x(state, 'exploration_avail') < n_tasks_needed:
-			await state.ctx.response.send_message(f"Error: Not enough exploration tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'exploration_avail')}.")
+			await state.ctx.followup.send(f"Error: Not enough exploration tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'exploration_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
 	elif task_type == 'combat':
 		if await get_player_x(state, 'combat_avail') < n_tasks_needed:
-			await state.ctx.response.send_message(f"Error: Not enough combat tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'combat_avail')}.")
+			await state.ctx.followup.send(f"Error: Not enough combat tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'combat_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'combat_avail', -n_tasks_needed)
 	elif task_type == 'puzzle':
 		if await get_player_x(state, 'puzzle_avail') < n_tasks_needed:
-			await state.ctx.response.send_message(f"Error: Not enough puzzle tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'puzzle_avail')}.")
+			await state.ctx.followup.send(f"Error: Not enough puzzle tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'puzzle_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
 	elif task_type == 'dialogue':
 		if await get_player_x(state, 'dialogue_avail') < n_tasks_needed:
-			await state.ctx.response.send_message(f"Error: Not enough dialogue tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'dialogue_avail')}.")
+			await state.ctx.followup.send(f"Error: Not enough dialogue tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'dialogue_avail')}.")
 			return
 		else:
 			await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
 	elif task_type == 'drunken-dragon':
 		if (await get_player_x(state, 'exploration_avail') < n_tasks_needed) or (await get_player_x(state, 'combat_avail') < n_tasks_needed) or (await get_player_x(state, 'puzzle_avail') < n_tasks_needed) or (await get_player_x(state, 'dialogue_avail') < n_tasks_needed):
-			await state.ctx.response.send_message(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
+			await state.ctx.followup.send(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
 			return
 	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) #have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
 
