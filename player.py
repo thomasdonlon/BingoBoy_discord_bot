@@ -141,7 +141,7 @@ async def award_xp(state, xp_amount):
 
 		#level up if you hit an xp threshold
 		for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
-			if current_xp - xp_amount < threshold < current_xp:
+			if current_xp - xp_amount < threshold <= current_xp:
 				await level_up(state)
 
 		#print an xp award message
@@ -190,7 +190,7 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 	#if the skill level crossed one or more thresholds, display the descriptions for the new skills
 	for threshold in skill_level_thresholds:
 		if old_skill_level < threshold <= new_skill_level:
-			skill_description = get_skill_description(threshold)
+			skill_description = get_skill_description(skill_name, threshold)
 			await ctx_print(state, f"New skill unlocked:\n{skill_description}")
 
 	#decrement the skill points
