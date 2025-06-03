@@ -38,7 +38,7 @@ def get_item_name(item_id):
     """
     Returns the name of the item based on its ID.
     """
-    if item_id in item_descriptions.keys():
+    if item_id in item_descriptions:
         return item_descriptions[item_id]
     else:
         return "Unknown Item"
