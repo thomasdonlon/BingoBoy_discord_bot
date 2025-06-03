@@ -129,26 +129,8 @@ base_ai_prompt = "You are providing a text-based RPG adventure game experience. 
                  "Always maintain a comical and engaging tone. " 
 
 #---------------------------------
-# FUNCTIONS
+# AI prompt things
 #---------------------------------
-
-def get_item_name(item_id):
-    """
-    Returns the name of the item based on its ID.
-    """
-    if item_id in item_descriptions:
-        return item_descriptions[item_id]
-    else:
-        return "Unknown Item"
-    
-def get_skill_description(skill, level):
-    """
-    Returns the description of a skill at a given level.
-    """
-    if skill in skill_level_descriptions and level in skill_level_descriptions[skill]:
-        return skill_level_descriptions[skill][level]
-    else:
-        return "Unknown Skill Level"
     
 quest_name_prompt =  f"You are currently generating the name of a quest for the player to complete. " \
                      f"Example quests include finding and slaying a monster, fetching a lost item for a wizard, or navigating an ancient temple to rescue a princess. " \
@@ -171,12 +153,13 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
             prompt += f"It should include the actions of the player to complete the previous step of the quest, " \
                       f"and a yet unfinished new task or problem for the player to solve, requiring the player to engage in {type}."
             prompt += f"This is step {current_step_number} of {total_step_number} steps in the quest. "
-            prompt += f"The previous text in this quest is provided here: {context}. Pick up where the previous step left off. "
+            prompt += f"Pick up where the previous step left off. The previous text in this quest is provided here: {context}"
     else:
         prompt += f"This is the final step of the quest. Wrap up all content from previous steps. " \
                   f"The content of your response should be roughly 3 sentences long. " \
                   f"The player does not need to complete any additional tasks to finish the quest. " \
                   f"Provide a reason why the player obtains a magical item as a reward for completing the quest. " \
+                  f"The previous text in this quest is provided here: {context}"
     
     return prompt
 
@@ -212,16 +195,3 @@ def drunken_dragon_ai_prompt(current_step_number, total_step_number, context):
                   f"The player does not need to complete any additional tasks to finish the quest. "
 
     return prompt
-
-def sanitize_text(text):
-    """
-    Cleans the text to remove any naughty SQL characters. This also prevents the chatgpt output from breaking the SQL query.
-    """
-
-    #remove any naughty characters that could be used for SQL injection or other nefarious purposes
-    naughty_strings = ["'", '"', ':', ';', '\\', '-', '(', ')', '[', ']', '{', '}', '<', '>', '=', '!', '@', '#', '$', '%', '^', '&', '*', '+', '/', '|']
-
-    for naughty in naughty_strings:
-        text = text.replace(naughty, '')
-    
-    return text.strip()

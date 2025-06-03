@@ -2,7 +2,8 @@
 
 from quest import Quest
 import conversation
-from text_storage import xp_level_thresholds, skill_level_thresholds, get_item_name, sidequest_ai_prompt
+from text_storage import xp_level_thresholds, skill_level_thresholds, sidequest_ai_prompt
+from utils import get_item_name
 
 #initialize the channel/player
 async def init(state):

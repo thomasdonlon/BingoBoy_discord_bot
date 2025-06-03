@@ -2,7 +2,8 @@
 
 import conversation
 import random
-from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt, sanitize_text
+from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt
+from utils import sanitize_text, replace_text_codes
 
 #---------------------------------------
 # Helpers
@@ -11,7 +12,7 @@ from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_p
 def format_quest_status(quest):
 	#format the quest status for display
 	#this is used in the quest status command to show the current quest status to the player
-	return f"{quest.name}: Difficulty: {quest.difficulty}, " \
+	return f"{replace_text_codes(quest.name)}: Difficulty: {quest.difficulty}, " \
 		   f"Step {quest.current_step_num + 1}/{quest.total_step_number}, " \
 		   f"Need {quest.current_step_num_tasks} {quest.current_step_type} tasks " \
 		   f"and {quest.current_step_num_deb_tasks} Debauchery tasks."
@@ -19,7 +20,7 @@ def format_quest_status(quest):
 #---------------------------------------
 # Reading/Writing
 #---------------------------------------
-#the Quest class is used to make the python code simpler, but the state has to be saved in the DB any time that we make changes. 
+#the Quest class is used to make the python code simpler, but the state has to be saved in the DB any time that we make changes to be loaded in later. 
 	#the format for a quest is (as a single large string):
 	#	quest_name: (no new lines in actual string, that's just for formatting here -- separation by colon)
 	#	quest_difficulty:
@@ -29,25 +30,6 @@ def format_quest_status(quest):
 	#	current_step_number_of_tasks:
 	#	current_step_number_of_debauchery_tasks:
 	#	previous_text_context (separated by semicolons)
-
-async def read_quest_from_db(state): #load in quest from db after saving it
-	quest = Quest(state.difficulty)  # Create a new Quest instance with the given difficulty
-	async with state.bot.pool.acquire() as con:
-		row = await con.fetchrow(f"SELECT current_quest FROM data WHERE name = '{state.player}'")
-		if row is not None:
-			quest_string = row['current_quest']
-			if quest_string:  # Check if the quest string is not empty
-				quest_data = quest_string.split(':')
-				if len(quest_data) == 8:  # Ensure the correct number of fields
-					quest.name = quest_data[0]
-					quest.difficulty = quest_data[1]
-					quest.current_step_num = int(quest_data[2])
-					quest.total_step_number = int(quest_data[3])
-					quest.current_step_type = quest_data[4]
-					quest.current_step_num_tasks = int(quest_data[5])
-					quest.current_step_num_deb_tasks = int(quest_data[6])
-					quest.text_log = quest_data[7].split(';') if quest_data[7] else []
-	return quest
 
 #---------------------------------------
 # Class Definition
@@ -187,7 +169,7 @@ class Quest:
 			)
 		else:
 			if self.current_step_num == 0:  # Only get a name for the quest at the start
-				self.name = (await conversation.ai_get_response(quest_name_prompt)).replace("'", "") #chatgpt gets apostrophe heavy
+				self.name = sanitize_text(await conversation.ai_get_response(quest_name_prompt)) #chatgpt loves to toss in problematic characters, so we remove them here
 
 			#generate the quest message
 			quest_message = await conversation.ai_get_response(
@@ -197,7 +179,10 @@ class Quest:
 		quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
 		
 		#send the quest message to the player
-		await state.ctx.followup.send(self.name + f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n' + quest_message + f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).')
+		await state.ctx.followup.send(replace_text_codes(self.name) + \
+								      f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n' + \
+									  replace_text_codes(quest_message) + \
+									  f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).')
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)

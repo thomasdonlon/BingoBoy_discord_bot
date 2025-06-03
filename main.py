@@ -5,7 +5,7 @@
 import os, logging, asyncpg
 import player
 from quest import format_quest_status, Quest
-from text_storage import get_item_name
+from utils import get_item_name
 from typing import Literal, Optional
 
 import discord
