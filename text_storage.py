@@ -161,7 +161,7 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
     f"Quests consist of a series of tasks that the player must complete in order to progress. " \
     f"Example quests include finding and slaying a monster, fetching a lost item for a wizard, or navigating an ancient temple to rescue a princess. " \
     f"The name of the quest is '{name}'. " \
-    f"The content of your response should be roughly 3 sentences long. "
+    f"The content of your response should be roughly 2 sentences long. "
 
     if current_step_number < total_step_number:
         if current_step_number == 0:
@@ -184,7 +184,7 @@ def sidequest_ai_prompt(type):
     prompt = base_ai_prompt + \
     f"You are currently generating a sidequest for the player to complete. " \
     f"A sidequest consist of a single task that the player have completed in order to progress. They are self-contained and do not leave cliffhangers. " \
-    f"The content of your response should be roughly 4 sentences long. " \
+    f"The content of your response should be roughly 3 sentences long. " \
     f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed. " \
     f"This sidequest is focused on {type}. " \
     
@@ -198,9 +198,9 @@ def drunken_dragon_ai_prompt(current_step_number, total_step_number, context):
     f"They have to hunt it down in the wilderness, and then defeat it in a final battle. " \
 
     if current_step_number < total_step_number:
-        prompt += f"The content of your response should be roughly 3 sentences long. " \
+        prompt += f"The content of your response should be roughly 2 sentences long. " \
                   f"It should include the actions of the player to complete the last step of the quest, " \
-                  f"and a new task or problem for the player to solve in order to progress to the next step. "
+                  f"and a yet unfinished new task or problem for the player to solve in order to progress to the next step. "
         if current_step_number == 0:
             prompt += f"This is the first step of the quest. "
         else:
@@ -208,7 +208,7 @@ def drunken_dragon_ai_prompt(current_step_number, total_step_number, context):
             prompt += f"The previous text in this quest is provided here: {context}. Pick up where the previous step left off. "
     else:
         prompt += f"This is the final step of the quest. Wrap up all content from previous steps. " \
-                  f"The content of your response should be roughly 3 sentences long. " \
+                  f"The content of your response should be roughly 2 sentences long. " \
                   f"The player does not need to complete any additional tasks to finish the quest. "
 
     return prompt
@@ -219,6 +219,9 @@ def sanitize_text(text):
     """
     #replace any double quotes with single quotes
     text = text.replace('"', "'")
+
+    #sometimes chatgpt likes to use two single quotes in a row, which breaks the SQL query
+    text = text.replace("''", "'")
 
     #remove any naughty characters that could be used for SQL injection or other nefarious purposes
     naughty_strings = [':', ';', '\\', '-', '(', ')', '[', ']', '{', '}', '<', '>', '=', '!', '@', '#', '$', '%', '^', '&', '*', '+', '/', '|']
