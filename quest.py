@@ -134,7 +134,7 @@ class Quest:
 			return
 		
 		self.current_step_num += 1
-		await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} for the quest '{replace_text_codes(self.name)}'!")
+		await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} of the quest '{replace_text_codes(self.name)}'!")
 		
 		#we run these either way
 		self.generate_new_tasks(state) #has to run before progress_quest_message
@@ -146,7 +146,7 @@ class Quest:
 			if self.difficulty == 'drunken-dragon':
 				await state.ctx.followup.send("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
 			else:
-				await state.ctx.followup.send(f"You have completed the quest '{self.name}'! You may start a new quest at any time.")
+				await state.ctx.followup.send(f"You have completed the quest '{replace_text_codes(self.name)}'! You may start a new quest at any time.")
 			return tmp_difficulty
 		else: #quest is not finished yet
 			await self.write_quest_to_db(state)
@@ -184,7 +184,7 @@ class Quest:
 		#send the quest message to the player
 		out_text = replace_text_codes(self.name)
 		if self.current_step_num == self.total_step_number:
-			out_text += f'Quest completed!\n\n'
+			out_text += f': Quest completed!\n\n'
 		else:
 			out_text += f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n'
 		out_text += replace_text_codes(quest_message)

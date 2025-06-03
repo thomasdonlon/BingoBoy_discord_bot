@@ -287,18 +287,18 @@ async def abandon_quest(state):
 	quest = await Quest.from_state(state)
 	await quest.abandon_quest(state)
 
-async def complete_sidequest(state, type):
+async def complete_sidequest(state, task_type):
 	#check if the player has enough banked tasks to complete the sidequest
 	if await get_player_x(state, 'debauchery_avail') < 1:
 		await state.ctx.response.send_message("Error: Not enough debauchery tasks available to complete sidequest.")
 		return
-	if await get_player_x(state, f"{type}_avail") < 3:
-		await state.ctx.response.send_message(f"Error: Not enough {type} tasks available to complete sidequest.")
+	if await get_player_x(state, f"{task_type}_avail") < 3:
+		await state.ctx.response.send_message(f"Error: Not enough {task_type} tasks available to complete sidequest.")
 		return
 	
 	#generate the quest message
 	sidequest_message = await conversation.ai_get_response(
-		sidequest_ai_prompt(type)
+		sidequest_ai_prompt(task_type)
 	)
 	
 	#send the quest message to the player
@@ -306,7 +306,7 @@ async def complete_sidequest(state, type):
 
 	#do the actual machinery of completing the sidequest
 	await increment_player_x(state, 'sidequest', 1)
-	await increment_player_x(state, f"{type}_avail", -3)
+	await increment_player_x(state, f"{task_type}_avail", -3)
 	await increment_player_x(state, 'debauchery_avail', -1)
 	await award_xp(state, 10*(await get_player_x(state, 'sidequest')))  #10 xp per sidequest, scaling with number of sidequests completed
 

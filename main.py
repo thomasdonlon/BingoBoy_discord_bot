@@ -277,9 +277,9 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
 
 @run_with_error_handling
 @tree.command(name="sidequest", description="Completes a sidequest.")
-async def sidequest(ctx : discord.Interaction) -> None:
+async def sidequest(ctx : discord.Interaction, task_type : str) -> None:
     state = State(bot, ctx, ctx.channel.name)
-    await player.complete_sidequest(state)
+    await player.complete_sidequest(state, task_type)
     #await ctx.response.send_message("Sidequest completed!", ephemeral=True)
 
 @run_with_error_handling
