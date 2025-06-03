@@ -176,6 +176,7 @@ class Quest:
 	#---------------------------------------
 
 	async def progress_quest_message(self, state):
+		await state.ctx.response.defer()
 		#get a name for the quest
 		if self.difficulty == 'drunken-dragon':
 			self.name = "The Drunken Dragon"
@@ -194,7 +195,7 @@ class Quest:
 			)
 		
 		#send the quest message to the player
-		await state.ctx.response.send_message(quest_message)
+		await state.ctx.followup.send(quest_message)
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)
