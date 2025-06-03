@@ -8,6 +8,7 @@
 #TODO: don't let the player buy skills above 35
 #TODO: Add skills
 #TODO: add items
+#TODO: test the undo system
 
 import os, logging, asyncpg
 import player
