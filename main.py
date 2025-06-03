@@ -120,7 +120,7 @@ async def end_game(winning_player):
 async def on_ready():
     bot.pool = await asyncpg.create_pool(user=PG_USER, password=PG_PW, host=PG_HOST, port=PG_PORT, database=PG_DB, max_size=10, max_inactive_connection_lifetime=15)
     logger = logging.getLogger('discord')
-    logger.setLevel(logging.DEBUG)    
+    logger.setLevel(logging.INFO)    
     print(f'{bot.user} is connected to the following guild(s):')
 
     for guild in bot.guilds:
@@ -279,6 +279,24 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
 @tree.command(name="sidequest", description="Completes a sidequest.")
 async def sidequest(ctx : discord.Interaction, task_type : str) -> None:
     state = State(bot, ctx, ctx.channel.name)
+
+    #check if the task type is valid
+    if task_type not in ('exploration', 'combat', 'puzzle', 'dialogue', 'debauchery', 'e', 'c', 'p', 'd', 'b'):
+        await ctx.response.send_message("Error: Invalid task type. Must be 'exploration', 'combat', 'puzzle', 'dialogue', or 'debauchery'.", ephemeral=True)
+        return
+    #convert the task type to a full word if it is a single letter
+    if task_type in ('e', 'exploration'):
+        task_type = 'exploration'
+    elif task_type in ('c', 'combat'):
+        task_type = 'combat'
+    elif task_type in ('p', 'puzzle'):
+        task_type = 'puzzle'
+    elif task_type in ('d', 'dialogue'):
+        task_type = 'dialogue'
+    elif task_type in ('b', 'debauchery'):
+        task_type = 'debauchery'
+    
+    await state.ctx.response.defer() #this takes a while to interact with chatgpt
     await player.complete_sidequest(state, task_type)
     #await ctx.response.send_message("Sidequest completed!", ephemeral=True)
 

@@ -290,10 +290,10 @@ async def abandon_quest(state):
 async def complete_sidequest(state, task_type):
 	#check if the player has enough banked tasks to complete the sidequest
 	if await get_player_x(state, 'debauchery_avail') < 1:
-		await state.ctx.response.send_message("Error: Not enough debauchery tasks available to complete sidequest.")
+		await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
 		return
 	if await get_player_x(state, f"{task_type}_avail") < 3:
-		await state.ctx.response.send_message(f"Error: Not enough {task_type} tasks available to complete sidequest.")
+		await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
 		return
 	
 	#generate the quest message
@@ -302,7 +302,7 @@ async def complete_sidequest(state, task_type):
 	)
 	
 	#send the quest message to the player
-	await state.ctx.response.send_message(sidequest_message)
+	await state.ctx.followup.send(sidequest_message)
 
 	#do the actual machinery of completing the sidequest
 	await increment_player_x(state, 'sidequest', 1)
