@@ -160,16 +160,16 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
     f"You are currently generating a quest for the player to complete. " \
     f"Quests consist of a series of tasks that the player must complete in order to progress. " \
     f"Example quests include finding and slaying a monster, fetching a lost item for a wizard, or navigating an ancient temple to rescue a princess. " \
-    f"The name of the quest is '{name}'. "
+    f"The name of the quest is '{name}'. " \
+    f"The content of your response should be roughly 3 sentences long. "
 
     if current_step_number < total_step_number:
-        prompt += f"The content of your response should be roughly 3 sentences long. " \
-                  f"It should include the actions of the player to complete the last step of the quest, " \
-                  f"and a new task or problem for the player to solve in order to progress to the next step. "
-        prompt += f"This step is focused on {type}."
         if current_step_number == 0:
-            prompt += f"This is the first step of the quest. "
+            prompt += f"This is the first step of the quest. " \
+                      f"Invent a yet unfinished new task or problem for the player to solve, requiring the player to engage in {type}."
         else:
+            prompt += f"It should include the actions of the player to complete the previous step of the quest, " \
+                      f"and a yet unfinished new task or problem for the player to solve, requiring the player to engage in {type}."
             prompt += f"This is step {current_step_number} of {total_step_number} steps in the quest. "
             prompt += f"The previous text in this quest is provided here: {context}. Pick up where the previous step left off. "
     else:

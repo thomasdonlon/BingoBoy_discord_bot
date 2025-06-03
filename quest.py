@@ -197,7 +197,7 @@ class Quest:
 		quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
 		
 		#send the quest message to the player
-		await state.ctx.followup.send(quest_message)
+		await state.ctx.followup.send(self.name + f': Step {self.current_step_num + 1}/{self.total_step_number}\n' + quest_message + f'\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} Debauchery tasks.')
 
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)
