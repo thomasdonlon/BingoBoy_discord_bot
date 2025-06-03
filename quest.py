@@ -74,7 +74,7 @@ class Quest:
 	@classmethod
 	# Factory method to create a Quest instance from a saved state
 	async def from_state(cls, state):
-		quest = Quest(state.difficulty)  # Create a new Quest instance with the given difficulty
+		self = cls()
 		async with state.bot.pool.acquire() as con:
 			row = await con.fetchrow(f"SELECT current_quest FROM data WHERE name = '{state.player}'")
 			if row is not None:
@@ -82,15 +82,15 @@ class Quest:
 				if quest_string:  # Check if the quest string is not empty
 					quest_data = quest_string.split(':')
 					if len(quest_data) == 8:  # Ensure the correct number of fields
-						quest.name = quest_data[0]
-						quest.difficulty = quest_data[1]
-						quest.current_step_num = int(quest_data[2])
-						quest.total_step_number = int(quest_data[3])
-						quest.current_step_type = quest_data[4]
-						quest.current_step_num_tasks = int(quest_data[5])
-						quest.current_step_num_deb_tasks = int(quest_data[6])
-						quest.text_log = quest_data[7].split(';') if quest_data[7] else []
-		return quest
+						self.name = quest_data[0]
+						self.difficulty = quest_data[1]
+						self.current_step_num = int(quest_data[2])
+						self.total_step_number = int(quest_data[3])
+						self.current_step_type = quest_data[4]
+						self.current_step_num_tasks = int(quest_data[5])
+						self.current_step_num_deb_tasks = int(quest_data[6])
+						self.text_log = quest_data[7].split(';') if quest_data[7] else []
+		return self
 
 	#---------------------------------------
 	# Reading/Writing
@@ -182,7 +182,7 @@ class Quest:
 
 			#generate the quest message
 			quest_message = await conversation.ai_get_response(
-				drunken_dragon_ai_prompt(self.current_step_number, self.total_step_number, self.text_log)
+				drunken_dragon_ai_prompt(self.current_step_num, self.total_step_number, self.text_log)
 			)
 		else:
 			if self.current_step_num == 0:  # Only get a name for the quest at the start
@@ -190,7 +190,7 @@ class Quest:
 
 			#generate the quest message
 			quest_message = await conversation.ai_get_response(
-				quest_ai_prompt(self.name, self.current_step_number, self.total_step_number, self.current_step_type, self.text_log)
+				quest_ai_prompt(self.name, self.current_step_num, self.total_step_number, self.current_step_type, self.text_log)
 			)
 		
 		#send the quest message to the player
