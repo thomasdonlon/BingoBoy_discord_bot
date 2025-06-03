@@ -212,3 +212,18 @@ def drunken_dragon_ai_prompt(current_step_number, total_step_number, context):
                   f"The player does not need to complete any additional tasks to finish the quest. "
 
     return prompt
+
+def sanitize_text(text):
+    """
+    Cleans the text to remove any naughty SQL characters. This also prevents the chatgpt output from breaking the SQL query.
+    """
+    #replace any double quotes with single quotes
+    text = text.replace('"', "'")
+
+    #remove any naughty characters that could be used for SQL injection or other nefarious purposes
+    naughty_strings = [':', ';', '\\', '-', '(', ')', '[', ']', '{', '}', '<', '>', '=', '!', '@', '#', '$', '%', '^', '&', '*', '+', '/', '|']
+
+    for naughty in naughty_strings:
+        text = text.replace(naughty, '')
+    
+    return text.strip()

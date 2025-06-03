@@ -2,7 +2,7 @@
 
 import conversation
 import random
-from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt
+from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt, sanitize_text
 
 #---------------------------------------
 # Helpers
@@ -193,6 +193,8 @@ class Quest:
 			quest_message = await conversation.ai_get_response(
 				quest_ai_prompt(self.name, self.current_step_num, self.total_step_number, self.current_step_type, self.text_log)
 			)
+
+		quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
 		
 		#send the quest message to the player
 		await state.ctx.followup.send(quest_message)
