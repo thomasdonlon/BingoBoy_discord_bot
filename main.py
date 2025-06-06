@@ -406,9 +406,16 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
             if task_name not in task_columns:
                 # Create a new column for the task
                 await con.execute(f'ALTER TABLE tasks ADD COLUMN IF NOT EXISTS {task_name} INTEGER DEFAULT 0')
+
+            #check that the player hasn't logged this task 5 times already
+            if task_name[0] != 'b': #debauchery tasks can be completed as many times as you want
+                num_completions = con.fetch(f'SELECT {task_name} FROM tasks WHERE name = {state.player}')
+                if num_completions >= 5:
+                    await ctx.response.send_message(f"Task '{task_name}' cannot be logged more than 5 times.", ephemeral=True)
+                    return
                 
             # Then, increment its count
-            await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = $1', state.player)
+            await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = {state.player}')
     
         # Log the task completion in the player's data
         await player.log_task(state, task_name)
