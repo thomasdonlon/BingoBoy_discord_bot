@@ -372,7 +372,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         #then decrement the task count in the database
         async with bot.pool.acquire() as con:
             # Check if the task exists
-            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = $1', 'tasks')
+            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = tasks')
             task_columns = [row['column_name'] for row in existing_tasks]
 
             if task_to_undo not in task_columns:
@@ -396,7 +396,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         async with bot.pool.acquire() as con:
             # Check if the task already exists
             # if not, create a column for that task
-            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = $1', 'tasks')
+            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = tasks')
             task_columns = [row['column_name'] for row in existing_tasks]
 
             # Insert the task into the tasks table if it doesn't already exist
@@ -406,13 +406,13 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 
             #check that the player hasn't logged this task 5 times already
             if task_name[0] != 'b': #debauchery tasks can be completed as many times as you want
-                num_completions = await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = {state.player}')
+                num_completions = await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = $1', state.player)
                 if num_completions >= 5:
                     await ctx.response.send_message(f"Task '{task_name}' cannot be logged more than 5 times.", ephemeral=True)
                     return
                 
             # Then, increment its count
-            await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = {state.player}')
+            await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = $1', state.player)
     
         # Log the task completion in the player's data
         await player.log_task(state, task_name)
