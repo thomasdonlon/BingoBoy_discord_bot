@@ -406,7 +406,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 
             #check that the player hasn't logged this task 5 times already
             if task_name[0] != 'b': #debauchery tasks can be completed as many times as you want
-                num_completions = con.fetch(f'SELECT {task_name} FROM tasks WHERE name = {state.player}')
+                num_completions = await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = {state.player}')
                 if num_completions >= 5:
                     await ctx.response.send_message(f"Task '{task_name}' cannot be logged more than 5 times.", ephemeral=True)
                     return
