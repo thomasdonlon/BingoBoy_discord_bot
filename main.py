@@ -196,7 +196,20 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
 @tree.command(name="init_channel", description="Start bot in this channel (Admin Only).")
 @commands.has_role('Admin')
 async def init_channel(ctx : discord.Interaction) -> None:
-    await player.init(State(bot, ctx, ctx.channel.name))
+    state = State(bot, ctx, ctx.channel.name)
+    await player.init(state)
+
+    #create the task table if it doesn't exist
+    async with bot.pool.acquire() as con:
+        await con.execute(f'''CREATE TABLE IF NOT EXISTS tasks (
+                            
+                    name				  VARCHAR PRIMARY KEY NOT NULL
+                    )''')
+        
+    #add the player to the task table if they aren't already in it
+    await con.execute(f"INSERT INTO tasks(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
+
+    #verification message
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
 
 @run_with_error_handling
