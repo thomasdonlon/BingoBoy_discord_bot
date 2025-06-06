@@ -69,7 +69,7 @@ async def display_player_status():
 
         embed = discord.Embed(title="Player Status", color=discord.Color.blue())
         for player in players:
-            inventory_text = ', '.join([get_item_name(item) for item in player['inventory']]) if player['inventory'] else 'Empty'
+            inventory_text = ', '.join([get_item_name(item).split(':')[0] for item in player['inventory'].split(',')]) if player['inventory'] else 'Empty'
             embed.add_field(name=player['name'], value=f"Level: {player['level']}\nXP: {player['xp']}\nStrength: {player['strength_level']}\nAgility: {player['agility_level']}\nWisdom: {player['wisdom_level']}\nQuests: Easy - {player['easy_quest']}, Medium - {player['medium_quest']}, Hard - {player['hard_quest']}\nSidequests: {player['sidequest']}\nInventory: {inventory_text}", inline=False)
 
         channel = bot.get_channel(summary_channel_id)  # Replace with your channel ID
