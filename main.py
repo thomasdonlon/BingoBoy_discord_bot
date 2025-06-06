@@ -1,7 +1,7 @@
 #central functionality of the bot, plus front-end command control
 
 #TODO: stop players from logging tasks if they have 5 completions of that task already
-#TODO: add a way to reset the game (clear all player data, etc)
+#TODO: actually log tasks in the task table when the players log them
 #TODO: add name of character, and use channel id to track player data rather than using channel name as player name
 #TODO: Add skills
 #TODO: add items
@@ -16,7 +16,6 @@ from typing import Literal, Optional
 import discord
 from discord.ext import commands, tasks
 import openai
-
 
 openai.api_key =        os.getenv('OPENAI_API_KEY')
 TOKEN =                 os.getenv('DISCORD_TOKEN')
@@ -229,6 +228,14 @@ async def stop_status_display(ctx : discord.Interaction) -> None:
         display_player_status.stop()
     else:
         await ctx.response.send_message(f"Status display is not running.", ephemeral=True)
+
+@run_with_error_handling
+@tree.command(name="reset_game", description="Resets the game data (Admin Only).")
+async def reset_game(ctx : discord.Interaction) -> None:
+    async with bot.pool.acquire() as con:
+        await con.execute(f"DROP TABLE data")
+        await con.execute(f"DROP TABLE tasks")
+    await ctx.response.send_message(f"Game data reset.", ephemeral=True)
 
 #--------------------------------------
 # PLAYER COMMANDS
