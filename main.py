@@ -3,9 +3,6 @@
 #TODO: stop players from logging tasks if they have 5 completions of that task already
 #TODO: add a way to reset the game (clear all player data, etc)
 #TODO: add name of character, and use channel id to track player data rather than using channel name as player name
-#TODO: test the display channel functionality
-#TODO: test item buying
-#TODO: don't let the player buy skills above 35
 #TODO: Add skills
 #TODO: add items
 #TODO: test the undo system
