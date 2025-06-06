@@ -59,6 +59,7 @@ display_embed = None #this is the embed that will be edited with the current pla
 #performs this action every 10 seconds
 @tasks.loop(seconds = 10, reconnect=True)
 async def display_player_status():
+    global display_embed
     try:
         async with bot.pool.acquire() as con:
             players = await con.fetch('SELECT * FROM data')
