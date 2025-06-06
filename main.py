@@ -372,7 +372,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         #then decrement the task count in the database
         async with bot.pool.acquire() as con:
             # Check if the task exists
-            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = tasks')
+            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = $1', 'tasks')
             task_columns = [row['column_name'] for row in existing_tasks]
 
             if task_to_undo not in task_columns:
@@ -396,7 +396,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         async with bot.pool.acquire() as con:
             # Check if the task already exists
             # if not, create a column for that task
-            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = tasks')
+            existing_tasks = await con.fetch('SELECT column_name FROM information_schema.columns WHERE table_name = $1', 'tasks')
             task_columns = [row['column_name'] for row in existing_tasks]
 
             # Insert the task into the tasks table if it doesn't already exist
