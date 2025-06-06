@@ -1,7 +1,5 @@
 #central functionality of the bot, plus front-end command control
 
-#TODO: stop players from logging tasks if they have 5 completions of that task already
-#TODO: actually log tasks in the task table when the players log them
 #TODO: add name of character, and use channel id to track player data rather than using channel name as player name
 #TODO: Add skills
 #TODO: add items
@@ -202,12 +200,11 @@ async def init_channel(ctx : discord.Interaction) -> None:
     #create the task table if it doesn't exist
     async with bot.pool.acquire() as con:
         await con.execute(f'''CREATE TABLE IF NOT EXISTS tasks (
-                            
                     name				  VARCHAR PRIMARY KEY NOT NULL
                     )''')
         
-    #add the player to the task table if they aren't already in it
-    await con.execute(f"INSERT INTO tasks(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
+        #add the player to the task table if they aren't already in it
+        await con.execute(f"INSERT INTO tasks(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
 
     #verification message
     await ctx.response.send_message(f"Done. Initialized channel.", ephemeral=True)
