@@ -109,8 +109,12 @@ class Quest:
 			self.current_step_num_deb_tasks = 3
 			self.current_step_type = 'drunken-dragon'
 			
-	async def start_quest(self, state): #have it split up this way so that the AI messages can be more tailored to the current quest state
+	def skip_dragon_steps(self, skill_levels):
+        # Strength 28: Skip first two steps of Drunken Dragon quest
+		if self.difficulty == 'drunken-dragon' and skill_levels.get('strength', 0) >= 28:
+			self.current_step_num = 2
 
+	async def start_quest(self, state, skill_levels=None):
 		#set total number of steps
 		if self.difficulty == 'easy':
 			self.total_step_number = random.randint(2,3)
@@ -123,6 +127,8 @@ class Quest:
 
 		#set current number and type of tasks
 		self.generate_new_tasks(state)
+		if skill_levels:
+			self.skip_dragon_steps(skill_levels)
 		await self.progress_quest_message(state)
 		await self.write_quest_to_db(state)
 
@@ -196,4 +202,3 @@ class Quest:
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)
 
-	

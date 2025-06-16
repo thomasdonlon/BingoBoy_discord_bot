@@ -81,10 +81,10 @@ skill_level_descriptions = {
     'wisdom': {
         1: r"Bardic Inspiration: You have a 25% chance to complete 2 Dialogue Tasks instead of 1",
         3: r"Arcane Initiate: You have a 25% chance to complete 2 Puzzle-Solving Tasks instead of 1.",
-        5: "Scrying Eye: Recieve 5 XP whenever another party completes a sidequest.",
+        5: "Scrying Eye: Recieve 5 bonus XP whenever you complete a sidequest.",
         10: "Gifted: Gain an additional 50 XP when you level up.",
         15: r"Chronomancy: Completing a quest step has a 20% chance to also complete the next quest step. ",
-        20: "Oracle: Gain 20 XP whenever another hero completes a quest. ",
+        20: "Oracle: Gain 10 bonus XP whenever you complete a quest step. ",
         28: "Epiphany: Immediately gain 500 XP. This XP cannot be boosted by other skills or items.",
         35: "Wisdom Mastery: Double all sources of XP except completing quests and sidequests. "
     }
