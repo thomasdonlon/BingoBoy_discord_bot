@@ -3,7 +3,9 @@
 #TODO: add name of character, and use channel id to track player data rather than using channel name as player name
 #TODO: Add skills
 #TODO: add items
-#TODO: test the undo system
+#TODO: add a built-in command to check an item or skill description as a player
+#TODO: display the task log list somewhere (live or otherwise)
+#TODO: set the announcement channel with an admin command and then display the drunken dragon end announcement there
 
 import os, logging, asyncpg
 import player
@@ -63,7 +65,13 @@ async def display_player_status():
 
         embed = discord.Embed(title="Player Status", color=discord.Color.blue())
         for player in players:
-            inventory_text = ', '.join([get_item_name(item).split(':')[0] for item in player['inventory'].split(',')]) if player['inventory'] else 'Empty'
+            # Get skill levels for percentage modifications
+            skill_levels = {
+                'strength': player['strength_level'],
+                'agility': player['agility_level'],
+                'wisdom': player['wisdom_level'],
+            }
+            inventory_text = ', '.join([get_item_name(item, skill_levels=skill_levels).split(':')[0] for item in player['inventory'].split(',')]) if player['inventory'] else 'Empty'
             embed.add_field(name=player['name'], value=f"Level: {player['level']}\nXP: {player['xp']}\nStrength: {player['strength_level']}\nAgility: {player['agility_level']}\nWisdom: {player['wisdom_level']}\nQuests: Easy - {player['easy_quest']}, Medium - {player['medium_quest']}, Hard - {player['hard_quest']}\nSidequests: {player['sidequest']}\nInventory: {inventory_text}", inline=False)
 
         channel = bot.get_channel(summary_channel_id)  # Replace with your channel ID
@@ -350,7 +358,12 @@ async def status(ctx : discord.Interaction) -> None:
         embed.add_field(name="Current Quest", value="None", inline=False)
     embed.add_field(name="Sidequests", value=current_player['sidequest'], inline=False)
     embed.add_field(name="Tasks", value=f"Exploration: {current_player['exploration_avail']}\nCombat: {current_player['combat_avail']}\nPuzzle-Solving: {current_player['puzzle_avail']}\nDialogue: {current_player['dialogue_avail']}\nDebauchery: {current_player['debauchery_avail']}\n", inline=False)
-    inventory_text = '\n'.join([get_item_name(item).split(':')[0] for item in current_player['inventory'].split(',')]) if current_player['inventory'] else 'Empty'
+    skill_levels = {
+        'strength': current_player['strength_level'],
+        'agility': current_player['agility_level'],
+        'wisdom': current_player['wisdom_level'],
+    }
+    inventory_text = '\n'.join([get_item_name(item, skill_levels=skill_levels).split(':')[0] for item in current_player['inventory'].split(',')]) if current_player['inventory'] else 'Empty'
     embed.add_field(name="Inventory", value=inventory_text, inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
@@ -406,7 +419,8 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 
             #check that the player hasn't logged this task 5 times already
             if task_name[0] != 'b': #debauchery tasks can be completed as many times as you want
-                num_completions = (await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = $1', state.player))[0] #this returns a length = 1 list
+                query_result = await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = $1', state.player) 
+                num_completions = query_result[0][task_name] #get the value we care about out of the query
                 if num_completions >= 5:
                     await ctx.response.send_message(f"Task '{task_name}' cannot be logged more than 5 times.", ephemeral=True)
                     return

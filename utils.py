@@ -34,23 +34,56 @@ def replace_text_codes(text):
 # Helpers
 #---------------------------------
 
-def get_item_name(item_id):
+def get_item_name(item_id, skill_levels=None, debauchery_avail=None, inventory=None):
     """
-    Returns the name of the item based on its ID.
+    Returns the name of the item based on its ID, adjusting percentage values for Agility 15/35 and Tankard of Tenacity.
     """
-    if item_id in item_descriptions:
-        return item_descriptions[item_id]
-    else:
-        return "Unknown Item"
-    
-def get_skill_description(skill, level):
+    from text_storage import item_descriptions
+    text = item_descriptions.get(item_id, "Unknown Item")
+    percent_mod = 0
+    if skill_levels:
+        # Agility 15: +15%, Agility 35: double base percentage
+        if skill_levels.get('agility', 0) >= 35:
+            percent_mod += 100  # double (100% increase)
+        elif skill_levels.get('agility', 0) >= 15:
+            percent_mod += 15
+    # Tankard of Tenacity: +2% per debauchery task (up to 100%)
+    if inventory and 'd7' in inventory and debauchery_avail is not None:
+        percent_mod += min(debauchery_avail * 2, 100)
+    import re
+    def repl(match):
+        base = int(match.group(1))
+        mod = base
+        if percent_mod:
+            mod = min(base + (base * percent_mod // 100), 100)
+        return f"{mod}%"
+    text = re.sub(r"(\d+)%", repl, text)
+    return text
+
+def get_skill_description(skill, level, skill_levels=None, debauchery_avail=None, inventory=None):
     """
-    Returns the description of a skill at a given level.
+    Returns the description of a skill at a given level, adjusting percentage values for Agility 15/35 and Tankard of Tenacity.
     """
-    if skill in skill_level_descriptions and level in skill_level_descriptions[skill]:
-        return skill_level_descriptions[skill][level]
-    else:
-        return "Unknown Skill Level"
+    from text_storage import skill_level_descriptions
+    text = skill_level_descriptions.get(skill, {}).get(level, "Unknown Skill Level")
+    percent_mod = 0
+    if skill_levels:
+        if skill_levels.get('agility', 0) >= 35:
+            percent_mod += 100
+        elif skill_levels.get('agility', 0) >= 15:
+            percent_mod += 15
+    # Tankard of Tenacity: +2% per debauchery task (up to 100%)
+    if inventory and 'd7' in inventory and debauchery_avail is not None:
+        percent_mod += min(debauchery_avail * 2, 100)
+    import re
+    def repl(match):
+        base = int(match.group(1))
+        mod = base
+        if percent_mod:
+            mod = min(base + (base * percent_mod // 100), 100)
+        return f"{mod}%"
+    text = re.sub(r"(\d+)%", repl, text)
+    return text
     
 async def ctx_print(state, text, ephemeral=False):
     try: #try a deferred context response 
