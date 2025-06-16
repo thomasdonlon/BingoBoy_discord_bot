@@ -7,7 +7,7 @@ def ai_error_message(): #TODO: Add this if I feel like it
 	#    (like spend more skill points than they have)
 	pass
 
-async def ai_get_response(prompt, model="gpt-4", max_tokens=1000):
+async def ai_get_response(prompt, model="o4-mini", max_tokens=1000):
     try:
         response = openai.OpenAI().chat.completions.create(
             model=model,
