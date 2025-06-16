@@ -34,7 +34,7 @@ def replace_text_codes(text):
 # Helpers
 #---------------------------------
 
-def get_item_name(item_id, skill_levels=None):
+def get_item_name(item_id, skill_levels=None, debauchery_avail=None, inventory=None):
     """
     Returns the name of the item based on its ID, adjusting percentage values for Agility 15/35 and Tankard of Tenacity.
     """
@@ -47,18 +47,20 @@ def get_item_name(item_id, skill_levels=None):
             percent_mod += 100  # double (100% increase)
         elif skill_levels.get('agility', 0) >= 15:
             percent_mod += 15
-        # Tankard of Tenacity: +2% per debauchery task (handled elsewhere if needed)
+    # Tankard of Tenacity: +2% per debauchery task (up to 100%)
+    if inventory and 'd7' in inventory and debauchery_avail is not None:
+        percent_mod += min(debauchery_avail * 2, 100)
     import re
     def repl(match):
         base = int(match.group(1))
         mod = base
         if percent_mod:
-            mod = base + (base * percent_mod // 100)
+            mod = min(base + (base * percent_mod // 100), 100)
         return f"{mod}%"
     text = re.sub(r"(\d+)%", repl, text)
     return text
 
-def get_skill_description(skill, level, skill_levels=None):
+def get_skill_description(skill, level, skill_levels=None, debauchery_avail=None, inventory=None):
     """
     Returns the description of a skill at a given level, adjusting percentage values for Agility 15/35 and Tankard of Tenacity.
     """
@@ -70,12 +72,15 @@ def get_skill_description(skill, level, skill_levels=None):
             percent_mod += 100
         elif skill_levels.get('agility', 0) >= 15:
             percent_mod += 15
+    # Tankard of Tenacity: +2% per debauchery task (up to 100%)
+    if inventory and 'd7' in inventory and debauchery_avail is not None:
+        percent_mod += min(debauchery_avail * 2, 100)
     import re
     def repl(match):
         base = int(match.group(1))
         mod = base
         if percent_mod:
-            mod = base + (base * percent_mod // 100)
+            mod = min(base + (base * percent_mod // 100), 100)
         return f"{mod}%"
     text = re.sub(r"(\d+)%", repl, text)
     return text

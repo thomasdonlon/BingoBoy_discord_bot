@@ -86,6 +86,10 @@ async def inventory_contains(state, item):
 	inventory_text = inventory_text.split(',')
 	return item in inventory_text
 
+async def get_player_inventory(state):
+    inventory_text = await get_player_x(state, 'inventory')
+    return set(inventory_text.split(',')) if inventory_text else set()
+
 async def get_player_skill_levels(state):
     return {
         'strength': await get_player_x(state, 'strength_level'),
@@ -108,6 +112,7 @@ def get_active_skill_effects(skill_levels):
 async def log_task(state, task_name):
     skill_levels = await get_player_skill_levels(state)
     effects = get_active_skill_effects(skill_levels)
+    inventory = await get_player_inventory(state)
     # Strength 1: Debauchery task gives +2 XP
     if task_name[0] == 'b' and any(skill == 'strength' and threshold == 1 for skill, threshold, _ in effects):
         await award_xp(state, 2)
@@ -177,13 +182,14 @@ async def get_last_logged_task(state):
 #----------------------------------
 # Leveling
 #----------------------------------
-async def award_xp(state, xp_amount):
+async def award_xp(state, xp_amount, source=None):
     skill_levels = await get_player_skill_levels(state)
     effects = get_active_skill_effects(skill_levels)
     # Wisdom 35: Double all sources of XP except completing quests and sidequests
-    double_xp = any(skill == 'wisdom' and threshold == 35 for skill, threshold, _ in effects)
-    if double_xp:
-        xp_amount *= 2
+    if source != 'quest' and source != 'sidequest':
+        double_xp = any(skill == 'wisdom' and threshold == 35 for skill, threshold, _ in effects)
+        if double_xp:
+            xp_amount *= 2
     # Wisdom 10: Gain an additional 50 XP when you level up
     # (Handled in level_up)
     current_xp = await increment_player_x(state, 'xp', xp_amount)
@@ -359,6 +365,7 @@ async def progress_quest(state):
             await state.ctx.followup.send(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail') }.")
             return
     await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) #have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
+   
     #progress the quest
     # Wisdom 20: Gain 10 bonus XP whenever you complete a quest step
     wisdom20_bonus = 10 if skill_levels.get('wisdom', 0) >= 20 else 0
@@ -395,6 +402,7 @@ async def progress_quest(state):
 async def complete_sidequest(state, task_type):
     skill_levels = await get_player_skill_levels(state)
     effects = get_active_skill_effects(skill_levels)
+    inventory = await get_player_inventory(state)
     # Agility 10: Sidequests require only 2 non-debauchery tasks
     n_tasks_needed = 2 if any(skill == 'agility' and threshold == 10 for skill, threshold, _ in effects) else 3
     if await get_player_x(state, 'debauchery_avail') < 1:
@@ -423,6 +431,27 @@ async def complete_sidequest(state, task_type):
     await increment_player_x(state, 'sidequest', 1)
     await increment_player_x(state, f"{task_type}_avail", -n_tasks_needed)
     await increment_player_x(state, 'debauchery_avail', -1)
-    await award_xp(state, xp_per_sidequest * (await get_player_x(state, 'sidequest')) + wisdom5_bonus)
+    await award_xp(state, xp_per_sidequest * (await get_player_x(state, 'sidequest')) + wisdom5_bonus, source='sidequest')
     await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
+
+async def buy_item(state, item_id):
+    # e6: Beer Belly: Immediately complete 10 Debauchery Tasks
+    if item_id == 'e6':
+        await increment_player_x(state, 'debauchery_avail', 10)
+        await ctx_print(state, "Beer Belly: You immediately completed 10 Debauchery Tasks!")
+    # m6: Skill Shard: Immediately gain XP equal to your current level x 50
+    if item_id == 'm6':
+        level = await get_player_x(state, 'level')
+        await award_xp(state, level * 50)
+        await ctx_print(state, f"Skill Shard: You gained {level * 50} XP!")
+    # e8: Replenishing Flask: Immediately complete a sidequest
+    if item_id == 'e8':
+        await complete_sidequest(state, 'exploration')
+        await ctx_print(state, "Replenishing Flask: You immediately completed a sidequest!")
+    # e9: Emergency Rations: Immediately complete [2] of each non-Debauchery Task
+    if item_id == 'e9':
+        for t in ['exploration', 'combat', 'puzzle', 'dialogue']:
+            await increment_player_x(state, f"{t}_avail", 2)
+        await ctx_print(state, "Emergency Rations: You immediately completed 2 of each non-Debauchery Task!")
+    await state.ctx.response.send_message(f"You have purchased {get_item_name(item_id)}.")
 
