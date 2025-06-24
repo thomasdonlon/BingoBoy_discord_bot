@@ -250,39 +250,30 @@ async def progress_quest(state):
 	n_tasks_needed = quest.current_step_num_tasks
 	n_deb_tasks_needed = quest.current_step_num_deb_tasks
 	
+	#check debauchery tasks first
 	if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
 		await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
 		return
-
-	if task_type == 'exploration':
-		if await get_player_x(state, 'exploration_avail') < n_tasks_needed:
-			await state.ctx.followup.send(f"Error: Not enough exploration tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'exploration_avail')}.")
-			return
-		else:
-			await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
-	elif task_type == 'combat':
-		if await get_player_x(state, 'combat_avail') < n_tasks_needed:
-			await state.ctx.followup.send(f"Error: Not enough combat tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'combat_avail')}.")
-			return
-		else:
-			await increment_player_x(state, 'combat_avail', -n_tasks_needed)
-	elif task_type == 'puzzle':
-		if await get_player_x(state, 'puzzle_avail') < n_tasks_needed:
-			await state.ctx.followup.send(f"Error: Not enough puzzle tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'puzzle_avail')}.")
-			return
-		else:
-			await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
-	elif task_type == 'dialogue':
-		if await get_player_x(state, 'dialogue_avail') < n_tasks_needed:
-			await state.ctx.followup.send(f"Error: Not enough dialogue tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, 'dialogue_avail')}.")
-			return
-		else:
-			await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
-	elif task_type == 'drunken-dragon':
+	
+	if task_type == 'drunken-dragon':
 		if (await get_player_x(state, 'exploration_avail') < n_tasks_needed) or (await get_player_x(state, 'combat_avail') < n_tasks_needed) or (await get_player_x(state, 'puzzle_avail') < n_tasks_needed) or (await get_player_x(state, 'dialogue_avail') < n_tasks_needed):
 			await state.ctx.followup.send(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
 			return
-	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) #have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
+		else:
+			await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
+			await increment_player_x(state, 'combat_avail', -n_tasks_needed)
+			await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
+			await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
+
+	else: #cover the regular task types
+		if await get_player_x(state, f'{task_type}_avail') < n_tasks_needed:
+			await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, f'{task_type}_avail')}.")
+			return
+		else:
+			await increment_player_x(state, f'{task_type}_avail', -n_tasks_needed)
+
+	#have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
+	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) 
 
 	#progress the quest
 	progress_result = await quest.progress_quest(state)
