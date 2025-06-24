@@ -4,6 +4,7 @@ from quest import Quest
 import conversation
 from text_storage import xp_level_thresholds, skill_level_thresholds, sidequest_ai_prompt
 from utils import get_item_name, ctx_print, get_skill_description
+import random
 
 #initialize the channel/player
 async def init(state):
@@ -90,20 +91,55 @@ async def inventory_contains(state, item):
 #----------------------------------
 
 async def log_task(state, task_name):
-	if task_name[0] == 'e':
-		await increment_player_x(state, 'exploration_avail', 1)
-	elif task_name[0] == 'c':
-		await increment_player_x(state, 'combat_avail', 1)
-	elif task_name[0] == 'p':
-		await increment_player_x(state, 'puzzle_avail', 1)
-	elif task_name[0] == 'd':
-		await increment_player_x(state, 'dialogue_avail', 1)
-	elif task_name[0] == 'b':
-		await increment_player_x(state, 'debauchery_avail', 1)
+    # Check for skill-based extra task completion
+    extra_task = False
+    extra_task_type = None
+    # Get player skill levels
+    strength_level = await get_player_x(state, 'strength_level')
+    agility_level = await get_player_x(state, 'agility_level')
+    wisdom_level = await get_player_x(state, 'wisdom_level')
 
-	#log the task in the database
-	async with state.bot.pool.acquire() as con:
-		await con.execute(f"UPDATE data SET last_logged_task = '{task_name}' WHERE name = '{state.player}'")
+    # Strength 3: 25% chance for extra combat task
+    if task_name[0] == 'c' and strength_level >= 3:
+        if random.random() < 0.25:
+            extra_task = True
+            extra_task_type = 'combat_avail'
+    # Agility 3: 25% chance for extra exploration task
+    elif task_name[0] == 'e' and agility_level >= 3:
+        if random.random() < 0.25:
+            extra_task = True
+            extra_task_type = 'exploration_avail'
+    # Wisdom 1: 25% chance for extra dialogue task
+    elif task_name[0] == 'd' and wisdom_level >= 1:
+        if random.random() < 0.25:
+            extra_task = True
+            extra_task_type = 'dialogue_avail'
+    # Wisdom 3: 25% chance for extra puzzle task
+    elif task_name[0] == 'p' and wisdom_level >= 3:
+        if random.random() < 0.25:
+            extra_task = True
+            extra_task_type = 'puzzle_avail'
+
+    # Normal task logging
+    if task_name[0] == 'e':
+        await increment_player_x(state, 'exploration_avail', 1)
+    elif task_name[0] == 'c':
+        await increment_player_x(state, 'combat_avail', 1)
+    elif task_name[0] == 'p':
+        await increment_player_x(state, 'puzzle_avail', 1)
+    elif task_name[0] == 'd':
+        await increment_player_x(state, 'dialogue_avail', 1)
+    elif task_name[0] == 'b':
+        await increment_player_x(state, 'debauchery_avail', 1)
+
+    # Apply extra task if triggered
+    if extra_task and extra_task_type:
+        await increment_player_x(state, extra_task_type, 1)
+        await ctx_print(state, f"Skill bonus! You completed an extra {extra_task_type.split('_')[0]} task.")
+
+    # Log the task in the database
+    async with state.bot.pool.acquire() as con:
+        await con.execute(f"UPDATE data SET last_logged_task = '{task_name}' WHERE name = '{state.player}'")
 
 async def remove_task(state, task_name):
 	#remove the task from the player's available tasks
