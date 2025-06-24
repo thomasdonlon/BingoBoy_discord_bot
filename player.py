@@ -291,7 +291,7 @@ async def progress_quest(state):
 	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) 
 
 	#progress the quest
-	progress_result = await quest.progress_quest(state)
+	complete_result = await quest.progress_quest(state) #returns None if the quest is not completed, or the difficulty of the quest if it is completed
 
 	# Strength 5: Each completed quest step has a 30% chance to award 10 XP
 	strength_level = await get_player_x(state, 'strength_level')
@@ -303,21 +303,37 @@ async def progress_quest(state):
 	if wisdom_level >= 20:
 		await award_xp(state, 10)
 		await ctx_print(state, "Skill bonus! Oracle: You gained 10 bonus XP for completing a quest step.")
+	# Wisdom 15: 20% chance to also complete the next quest step
+	if complete_result is None and wisdom_level >= 15 and random.random() < 0.20:
+		# Only attempt to progress if quest is not already completed
+		current_quest = await get_player_x(state, 'current_quest')
+		if current_quest:
+			quest = await Quest.from_state(state)
+			complete_result = await quest.progress_quest(state)
+			await ctx_print(state, "Skill bonus! Chronomancy: You also completed the next quest step.")
+
 	#if the quest was completed, add XP and rewards
-	if progress_result:
-		if progress_result == 'easy':
-			await increment_player_x(state, 'easy_quest', 1)
-			await increment_player_x(state, 'easy_quest_points', 1)
-			await award_xp(state, 100, double_allowed=False)
-		elif progress_result == 'medium':
-			await increment_player_x(state, 'medium_quest', 1)
-			await increment_player_x(state, 'medium_quest_points', 1)
-			await award_xp(state, 200, double_allowed=False)
-		elif progress_result == 'hard':
-			await increment_player_x(state, 'hard_quest', 1)
-			await increment_player_x(state, 'hard_quest_points', 1)
-			await award_xp(state, 400, double_allowed=False)
-		return progress_result
+	quest_xp = {
+		'easy': 100,
+		'medium': 200,
+		'hard': 400
+	}
+	if complete_result:
+		# Strength 35: Double the number of items you get from quest rewards
+		strength_level = await get_player_x(state, 'strength_level')
+		item_multiplier = 2 if strength_level >= 35 else 1
+		# Strength 15: Complete 2 debauchery tasks on quest completion
+		if strength_level >= 15:
+			await increment_player_x(state, 'debauchery_avail', 2)
+			await ctx_print(state, "Skill bonus! Take the Edge Off: You completed 2 debauchery tasks.")
+			
+		if complete_result in ('easy', 'medium', 'hard'):
+			await increment_player_x(state, f'{complete_result}_quest', 1)
+			await increment_player_x(state, f'{complete_result}_quest_points', item_multiplier)
+			await award_xp(state, quest_xp[complete_result], double_allowed=False)
+			if item_multiplier == 2:
+				await ctx_print(state, "Skill bonus! Strength Mastery: You received double quest item points.")
+		return complete_result
 	return
 
 async def abandon_quest(state):
@@ -355,6 +371,7 @@ async def complete_sidequest(state, task_type):
     await increment_player_x(state, 'sidequest', 1)
     await increment_player_x(state, f"{task_type}_avail", -required_tasks)
     await increment_player_x(state, 'debauchery_avail', -1)
+
     # Sidequest XP bonus logic
     agility_level = await get_player_x(state, 'agility_level')
     wisdom_level = await get_player_x(state, 'wisdom_level')
@@ -366,8 +383,11 @@ async def complete_sidequest(state, task_type):
     else:
         sq_xp_bonus += 10
         await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
-    # Wisdom 5: Scrying Eye: Receive 5 bonus XP whenever you complete a sidequest
+
+	# Award the main XP for completing the sidequest
     await award_xp(state, sq_xp_bonus, double_allowed=False)
+
+	# Wisdom 5: Scrying Eye: Receive 5 bonus XP whenever you complete a sidequest
     if wisdom_level >= 5:
         await award_xp(state, 5)
         await ctx_print(state, f"Skill bonus! Scrying Eye: You gained bonus XP for this sidequest.")
