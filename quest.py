@@ -130,6 +130,9 @@ class Quest:
 				self.total_step_number = random.randint(3,5)
 		elif self.difficulty == 'drunken-dragon':
 			self.total_step_number = 5
+			if strength_level >= 28:
+				self.current_step_num = 2
+				await state.ctx.followup.send("Strength 28: You skip the first two steps of the Drunken Dragon quest!")
 
 		#set current number and type of tasks
 		self.generate_new_tasks(state)

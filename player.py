@@ -32,7 +32,8 @@ async def init(state):
 				debauchery_avail      INT DEFAULT 0,
 				inventory             TEXT DEFAULT '',
 				current_quest         TEXT DEFAULT NULL,
-				last_logged_task      VARCHAR DEFAULT ''
+				last_logged_task      VARCHAR DEFAULT '',
+                sq_xp_bonus         INT DEFAULT 0
 				)''')
 
 		# #set default values #no longer needed, now done in the table creation
@@ -104,6 +105,9 @@ async def log_task(state, task_name):
         await increment_player_x(state, 'dialogue_avail', 1)
     elif task_name[0] == 'b':
         await increment_player_x(state, 'debauchery_avail', 1)
+        # Strength 1: Completing a Debauchery Task also provides +2 XP
+        if strength_level >= 1:
+            await award_xp(state, 2)
 
     # Apply extra task if triggered
     if extra_task and extra_task_type:
@@ -145,21 +149,28 @@ async def get_last_logged_task(state):
 #----------------------------------
 # Leveling
 #----------------------------------
-async def award_xp(state, xp_amount):
-		current_xp = await increment_player_x(state, 'xp', xp_amount)
+async def award_xp(state, xp_amount, double_allowed=True):
+	wisdom_level = await get_player_x(state, 'wisdom_level')
+	if double_allowed and wisdom_level >= 35: # Wisdom 35: Mastery: Doubles all XP gains
+		xp_amount *= 2
+	current_xp = await increment_player_x(state, 'xp', xp_amount)
 
-		#level up if you hit an xp threshold
-		for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
-			if current_xp - xp_amount < threshold <= current_xp:
-				await level_up(state)
+	#level up if you hit an xp threshold
+	for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
+		if current_xp - xp_amount < threshold <= current_xp:
+			await level_up(state)
 
-		#print an xp award message
-		await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
+	#print an xp award message
+	await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
 
 async def level_up(state):
 	await increment_player_x(state, 'level', 1)
 	await increment_player_x(state, 'skill_points', await get_player_x(state, 'level'))
-
+	# Wisdom 10: Gain an additional 50 XP when you level up
+	wisdom_level = await get_player_x(state, 'wisdom_level')
+	if wisdom_level >= 10:
+		await award_xp(state, 50)
+		await ctx_print(state, "Skill bonus! Gifted: You gained 50 bonus XP for leveling up.")
 	await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
 
 #----------------------------------
@@ -215,6 +226,10 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 		if old_skill_level < threshold <= new_skill_level:
 			skill_description = get_skill_description(skill_name, threshold)
 			await ctx_print(state, f"New skill unlocked:\n{skill_description}")
+			# Wisdom 28: Epiphany: Immediately gain 500 XP. This XP cannot be boosted by other skills or items.
+			if skill_name == 'wisdom' and threshold == 28:
+				await increment_player_x(state, 'xp', 500)
+				await ctx_print(state, "Skill bonus! Epiphany: You immediately gain 500 XP (not boosted by other effects).")
 
 	#decrement the skill points
 	await increment_player_x(state, 'skill_points', -number)
@@ -278,20 +293,30 @@ async def progress_quest(state):
 	#progress the quest
 	progress_result = await quest.progress_quest(state)
 
+	# Strength 5: Each completed quest step has a 30% chance to award 10 XP
+	strength_level = await get_player_x(state, 'strength_level')
+	wisdom_level = await get_player_x(state, 'wisdom_level')
+	if strength_level >= 5 and random.random() < 0.3:
+		await award_xp(state, 10)
+		await ctx_print(state, "Skill bonus! Booze Boost: You gained 10 bonus XP for completing a quest step.")
+	# Wisdom 20: Gain 10 bonus XP whenever you complete a quest step
+	if wisdom_level >= 20:
+		await award_xp(state, 10)
+		await ctx_print(state, "Skill bonus! Oracle: You gained 10 bonus XP for completing a quest step.")
 	#if the quest was completed, add XP and rewards
 	if progress_result:
 		if progress_result == 'easy':
 			await increment_player_x(state, 'easy_quest', 1)
 			await increment_player_x(state, 'easy_quest_points', 1)
-			await award_xp(state, 100)
+			await award_xp(state, 100, double_allowed=False)
 		elif progress_result == 'medium':
 			await increment_player_x(state, 'medium_quest', 1)
 			await increment_player_x(state, 'medium_quest_points', 1)
-			await award_xp(state, 200)
+			await award_xp(state, 200, double_allowed=False)
 		elif progress_result == 'hard':
 			await increment_player_x(state, 'hard_quest', 1)
 			await increment_player_x(state, 'hard_quest_points', 1)
-			await award_xp(state, 400)
+			await award_xp(state, 400, double_allowed=False)
 		return progress_result
 	return
 
@@ -330,7 +355,22 @@ async def complete_sidequest(state, task_type):
     await increment_player_x(state, 'sidequest', 1)
     await increment_player_x(state, f"{task_type}_avail", -required_tasks)
     await increment_player_x(state, 'debauchery_avail', -1)
-    await award_xp(state, 10*(await get_player_x(state, 'sidequest')))  #10 xp per sidequest, scaling with number of sidequests completed
+    # Sidequest XP bonus logic
+    agility_level = await get_player_x(state, 'agility_level')
+    wisdom_level = await get_player_x(state, 'wisdom_level')
+    sq_xp_bonus = await get_player_x(state, 'sq_xp_bonus')
+    if agility_level >= 5:
+        sq_xp_bonus += 20
+        await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
+        await ctx_print(state, f"Skill bonus! Farsighted: Your sidequest XP bonus is now {sq_xp_bonus}.")
+    else:
+        sq_xp_bonus += 10
+        await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
+    # Wisdom 5: Scrying Eye: Receive 5 bonus XP whenever you complete a sidequest
+    await award_xp(state, sq_xp_bonus, double_allowed=False)
+    if wisdom_level >= 5:
+        await award_xp(state, 5)
+        await ctx_print(state, f"Skill bonus! Scrying Eye: You gained bonus XP for this sidequest.")
 
     # --- Skill Effects: Agility 1, 20, 28 ---
     agility_level = await get_player_x(state, 'agility_level')
