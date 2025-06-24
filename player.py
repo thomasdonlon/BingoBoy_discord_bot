@@ -36,29 +36,10 @@ async def init(state):
                 sq_xp_bonus         INT DEFAULT 0
 				)''')
 
-		# #set default values #no longer needed, now done in the table creation
+		#initialize the player data if it doesn't exist
 		await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
-		# await con.execute(f'INSERT INTO data(level) VALUES(1) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(xp) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(easy_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(medium_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(hard_quest) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(easy_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(medium_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(hard_quest_points) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(sidequest) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(strength_level) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(agility_level) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(wisdom_level) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(skill_points) VALUES(1) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(exploration_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(combat_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(puzzle_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(dialogue_avail) VALUES(0) ON CONFLICT DO NOTHING')
-		# await con.execute(f'INSERT INTO data(debauchery_avail) VALUES(0) ON CONFLICT DO NOTHING')
 
 		print(f"Initialized channel: {state.player}")
-
 
 #----------------------------------
 # Tasks
