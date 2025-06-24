@@ -3,7 +3,7 @@
 from quest import Quest
 import conversation
 from text_storage import xp_level_thresholds, skill_level_thresholds, sidequest_ai_prompt
-from utils import get_item_name, ctx_print, get_skill_description
+from utils import get_item_name, ctx_print, get_skill_description, get_player_x, set_player_x, increment_player_x, inventory_contains
 import random
 
 #initialize the channel/player
@@ -58,33 +58,6 @@ async def init(state):
 
 		print(f"Initialized channel: {state.player}")
 
-#----------------------------------
-# Helpers
-#----------------------------------
-
-async def get_player_x(state, x):
-	async with state.bot.pool.acquire() as con:
-		return await con.fetchval(f"SELECT {x} FROM data WHERE name = '{state.player}'")
-
-async def set_player_x(state, x, val):                                                                  
-	async with state.bot.pool.acquire() as con:
-		await con.execute(f"UPDATE data SET {x} = '{val}' WHERE name = '{state.player}'")
-
-	return val
-	#return await get_player_x(state, state.player, x)
-
-async def increment_player_x(state, x, num):                                                                  
-	async with state.bot.pool.acquire() as con:
-		current_val = await get_player_x(state, x)
-		val = current_val + num
-		await con.execute(f"UPDATE data SET {x} = '{val}' WHERE name = '{state.player}'")
-
-	return val
-
-async def inventory_contains(state, item):
-	inventory_text = await get_player_x(state, 'inventory')
-	inventory_text = inventory_text.split(',')
-	return item in inventory_text
 
 #----------------------------------
 # Tasks
@@ -343,29 +316,52 @@ async def abandon_quest(state):
 	await quest.abandon_quest(state)
 
 async def complete_sidequest(state, task_type):
-	#check if the player has enough banked tasks to complete the sidequest
-	if await get_player_x(state, 'debauchery_avail') < 1:
-		await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
-		return
-	if await get_player_x(state, f"{task_type}_avail") < 3:
-		await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
-		return
-	
-	#generate the quest message
-	sidequest_message = await conversation.ai_get_response(
-		sidequest_ai_prompt(task_type)
-	)
-	
-	#send the quest message to the player
-	await state.ctx.followup.send(sidequest_message)
+    # Agility 10: Sidequests require only 2 non-Debauchery Tasks
+    agility_level = await get_player_x(state, 'agility_level')
+    required_tasks = 2 if agility_level >= 10 else 3
+    #check if the player has enough banked tasks to complete the sidequest
+    if await get_player_x(state, 'debauchery_avail') < 1:
+        await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
+        return
+    if await get_player_x(state, f"{task_type}_avail") < required_tasks:
+        await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
+        return
+    
+    #generate the quest message
+    sidequest_message = await conversation.ai_get_response(
+        sidequest_ai_prompt(task_type)
+    )
+    
+    #send the quest message to the player
+    await state.ctx.followup.send(sidequest_message)
 
-	#do the actual machinery of completing the sidequest
-	await increment_player_x(state, 'sidequest', 1)
-	await increment_player_x(state, f"{task_type}_avail", -3)
-	await increment_player_x(state, 'debauchery_avail', -1)
-	await award_xp(state, 10*(await get_player_x(state, 'sidequest')))  #10 xp per sidequest, scaling with number of sidequests completed
+    #do the actual machinery of completing the sidequest
+    await increment_player_x(state, 'sidequest', 1)
+    await increment_player_x(state, f"{task_type}_avail", -required_tasks)
+    await increment_player_x(state, 'debauchery_avail', -1)
+    await award_xp(state, 10*(await get_player_x(state, 'sidequest')))  #10 xp per sidequest, scaling with number of sidequests completed
 
-	await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
+    # --- Skill Effects: Agility 1, 20, 28 ---
+    agility_level = await get_player_x(state, 'agility_level')
+    # Agility 1: 10% chance for Easy Quest Item Point
+    if agility_level >= 1 and random.random() < 0.10:
+        await increment_player_x(state, 'easy_quest_points', 1)
+        await ctx_print(state, "Skill bonus! You gained an Easy Quest Item Point.")
+    # Agility 20: 20% chance to also complete the current quest step
+    if agility_level >= 20 and random.random() < 0.20:
+        # Progress the current quest if one exists
+        current_quest = await get_player_x(state, 'current_quest')
+        if current_quest:
+            quest = await Quest.from_state(state)
+            await quest.progress_quest(state)
+            await ctx_print(state, "Skill bonus! You also progressed your current quest step.")
+    # Agility 28: 20% chance for random item point
+    if agility_level >= 28 and random.random() < 0.20:
+        rarity = random.choice(['easy_quest_points', 'medium_quest_points', 'hard_quest_points'])
+        await increment_player_x(state, rarity, 1)
+        await ctx_print(state, f"Skill bonus! You gained a {rarity.replace('_', ' ').title()}.")
+
+    await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
 
 #----------------------------------
 # Items

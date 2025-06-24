@@ -57,3 +57,31 @@ async def ctx_print(state, text, ephemeral=False):
         await state.ctx.followup.send(text, ephemeral=ephemeral)
     except Exception as e: #if the deferred response fails, send a regular interaction message instead
         await state.ctx.response.send_message(text, ephemeral=ephemeral)
+
+#----------------------------------
+# Helpers for Player Data
+#----------------------------------
+
+async def get_player_x(state, x):
+	async with state.bot.pool.acquire() as con:
+		return await con.fetchval(f"SELECT {x} FROM data WHERE name = '{state.player}'")
+
+async def set_player_x(state, x, val):                                                                  
+	async with state.bot.pool.acquire() as con:
+		await con.execute(f"UPDATE data SET {x} = '{val}' WHERE name = '{state.player}'")
+
+	return val
+	#return await get_player_x(state, state.player, x)
+
+async def increment_player_x(state, x, num):                                                                  
+	async with state.bot.pool.acquire() as con:
+		current_val = await get_player_x(state, x)
+		val = current_val + num
+		await con.execute(f"UPDATE data SET {x} = '{val}' WHERE name = '{state.player}'")
+
+	return val
+
+async def inventory_contains(state, item):
+	inventory_text = await get_player_x(state, 'inventory')
+	inventory_text = inventory_text.split(',')
+	return item in inventory_text

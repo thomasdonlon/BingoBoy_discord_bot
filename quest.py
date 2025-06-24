@@ -3,7 +3,7 @@
 import conversation
 import random
 from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt
-from utils import sanitize_text, replace_text_codes
+from utils import sanitize_text, replace_text_codes, get_player_x
 
 #---------------------------------------
 # Helpers
@@ -112,12 +112,22 @@ class Quest:
 	async def start_quest(self, state): #have it split up this way so that the AI messages can be more tailored to the current quest state
 
 		#set total number of steps
+		strength_level = await get_player_x(state, 'strength_level')
 		if self.difficulty == 'easy':
-			self.total_step_number = random.randint(2,3)
+			if strength_level >= 10:
+				self.total_step_number = 2  # never max (2-3), so always 2
+			else:
+				self.total_step_number = random.randint(2,3)
 		elif self.difficulty == 'medium':
-			self.total_step_number = random.randint(3,4)
+			if strength_level >= 10:
+				self.total_step_number = 3  # never max (3-4), so always 3
+			else:
+				self.total_step_number = random.randint(3,4)
 		elif self.difficulty == 'hard':
-			self.total_step_number = random.randint(3,5)
+			if strength_level >= 10:
+				self.total_step_number = random.randint(3,4)  # never max (3-5), so always 3 or 4
+			else:
+				self.total_step_number = random.randint(3,5)
 		elif self.difficulty == 'drunken-dragon':
 			self.total_step_number = 5
 
@@ -196,4 +206,3 @@ class Quest:
 		#add the quest message to the text log for context
 		self.text_log.append(quest_message)
 
-	
