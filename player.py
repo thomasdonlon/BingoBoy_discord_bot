@@ -231,91 +231,120 @@ async def start_quest(state, difficulty):
 	await Quest.create(state, difficulty)
 
 async def progress_quest(state):
-	#check if the player has a quest
-	current_quest = await get_player_x(state, 'current_quest')
-	if not current_quest:
-		await state.ctx.followup.send("Error: You do not have an active quest.")
-		return
+    # check if the player has a quest
+    current_quest = await get_player_x(state, 'current_quest')
+    if not current_quest:
+        await state.ctx.followup.send("Error: You do not have an active quest.")
+        return
 
-	#read the quest from the database
-	quest = await Quest.from_state(state)
+    # read the quest from the database
+    quest = await Quest.from_state(state)
 
-	#check that the player has enough banked tasks to progress the quest
-	#and deduct the tasks from the player's available tasks
-	task_type = quest.current_step_type
-	n_tasks_needed = quest.current_step_num_tasks
-	n_deb_tasks_needed = quest.current_step_num_deb_tasks
-	
-	#check debauchery tasks first
-	if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
-		await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
-		return
-	
-	if task_type == 'drunken-dragon':
-		if (await get_player_x(state, 'exploration_avail') < n_tasks_needed) or (await get_player_x(state, 'combat_avail') < n_tasks_needed) or (await get_player_x(state, 'puzzle_avail') < n_tasks_needed) or (await get_player_x(state, 'dialogue_avail') < n_tasks_needed):
-			await state.ctx.followup.send(f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}.")
-			return
-		else:
-			await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
-			await increment_player_x(state, 'combat_avail', -n_tasks_needed)
-			await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
-			await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
+    # check that the player has enough banked tasks to progress the quest
+    # and deduct the tasks from the player's available tasks
+    task_type = quest.current_step_type
+    n_tasks_needed = quest.current_step_num_tasks
+    n_deb_tasks_needed = quest.current_step_num_deb_tasks
 
-	else: #cover the regular task types
-		if await get_player_x(state, f'{task_type}_avail') < n_tasks_needed:
-			await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, f'{task_type}_avail')}.")
-			return
-		else:
-			await increment_player_x(state, f'{task_type}_avail', -n_tasks_needed)
+    # check debauchery tasks first
+    if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
+        await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
+        return
 
-	#have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
-	await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed) 
+    if task_type == 'drunken-dragon':
+        if (
+            await get_player_x(state, 'exploration_avail') < n_tasks_needed
+            or await get_player_x(state, 'combat_avail') < n_tasks_needed
+            or await get_player_x(state, 'puzzle_avail') < n_tasks_needed
+            or await get_player_x(state, 'dialogue_avail') < n_tasks_needed
+        ):
+            await state.ctx.followup.send(
+                f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}."
+            )
+            return
+        else:
+            await increment_player_x(state, 'exploration_avail', -n_tasks_needed)
+            await increment_player_x(state, 'combat_avail', -n_tasks_needed)
+            await increment_player_x(state, 'puzzle_avail', -n_tasks_needed)
+            await increment_player_x(state, 'dialogue_avail', -n_tasks_needed)
+    else:  # cover the regular task types
+        if await get_player_x(state, f'{task_type}_avail') < n_tasks_needed:
+            await state.ctx.followup.send(
+                f"Error: Not enough {task_type} tasks available to progress quest. Need {n_tasks_needed}, have {await get_player_x(state, f'{task_type}_avail')}."
+            )
+            return
+        else:
+            await increment_player_x(state, f'{task_type}_avail', -n_tasks_needed)
 
-	#progress the quest
-	complete_result = await quest.progress_quest(state) #returns None if the quest is not completed, or the difficulty of the quest if it is completed
+    # have to run this at the end so that it doesn't deduct the debauchery tasks if the player doesn't have enough non-debauchery tasks
+    await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed)
 
-	# Strength 5: Each completed quest step has a 30% chance to award 10 XP
-	strength_level = await get_player_x(state, 'strength_level')
-	wisdom_level = await get_player_x(state, 'wisdom_level')
-	if strength_level >= 5 and random.random() < 0.3:
-		await award_xp(state, 10)
-		await ctx_print(state, "Skill bonus! Booze Boost: You gained 10 bonus XP for completing a quest step.")
-	# Wisdom 20: Gain 10 bonus XP whenever you complete a quest step
-	if wisdom_level >= 20:
-		await award_xp(state, 10)
-		await ctx_print(state, "Skill bonus! Oracle: You gained 10 bonus XP for completing a quest step.")
-	# Wisdom 15: 20% chance to also complete the next quest step
-	if complete_result is None and wisdom_level >= 15 and random.random() < 0.20:
-		# Only attempt to progress if quest is not already completed
-		current_quest = await get_player_x(state, 'current_quest')
-		if current_quest:
-			quest = await Quest.from_state(state)
-			complete_result = await quest.progress_quest(state)
-			await ctx_print(state, "Skill bonus! Chronomancy: You also completed the next quest step.")
+    # progress the quest
+    complete_result = await quest.progress_quest(state)  # returns None if the quest is not completed, or the difficulty of the quest if it is completed
 
-	#if the quest was completed, add XP and rewards
-	quest_xp = {
-		'easy': 100,
-		'medium': 200,
-		'hard': 400
-	}
-	if complete_result:
-		# Strength 35: Double the number of items you get from quest rewards
-		strength_level = await get_player_x(state, 'strength_level')
-		item_multiplier = 2 if strength_level >= 35 else 1
-		# Strength 15: Complete 2 debauchery tasks on quest completion
-		if strength_level >= 15:
-			await increment_player_x(state, 'debauchery_avail', 2)
-			await ctx_print(state, "Skill bonus! Take the Edge Off: You completed 2 debauchery tasks.")
-			
-		if complete_result in ('easy', 'medium', 'hard'):
-			await increment_player_x(state, f'{complete_result}_quest', 1)
-			await increment_player_x(state, f'{complete_result}_quest_points', item_multiplier)
-			await award_xp(state, quest_xp[complete_result], double_allowed=False)
-			if item_multiplier == 2:
-				await ctx_print(state, "Skill bonus! Strength Mastery: You received double quest item points.")
-		return complete_result
-	return
+    # Strength 5: Each completed quest step has a 30% chance to award 10 XP
+    strength_level = await get_player_x(state, 'strength_level')
+    wisdom_level = await get_player_x(state, 'wisdom_level')
+    if strength_level >= 5 and random.random() < 0.3:
+        await award_xp(state, 10)
+        await ctx_print(state, "Skill bonus! Booze Boost: You gained 10 bonus XP for completing a quest step.")
+    # Wisdom 20: Gain 10 bonus XP whenever you complete a quest step
+    if wisdom_level >= 20:
+        await award_xp(state, 10)
+        await ctx_print(state, "Skill bonus! Oracle: You gained 10 bonus XP for completing a quest step.")
+    # Wisdom 15: 20% chance to also complete the next quest step
+    if complete_result is None and wisdom_level >= 15 and random.random() < 0.20:
+        # Only attempt to progress if quest is not already completed
+        current_quest = await get_player_x(state, 'current_quest')
+        if current_quest:
+            quest = await Quest.from_state(state)
+            complete_result = await quest.progress_quest(state)
+            await ctx_print(state, "Skill bonus! Chronomancy: You also completed the next quest step.")
+
+    # if the quest was completed, add XP and rewards
+    quest_xp = {
+        'easy': 100,
+        'medium': 200,
+        'hard': 400
+    }
+    if complete_result:
+        # Strength 35: Double the number of items you get from quest rewards
+        strength_level = await get_player_x(state, 'strength_level')
+        item_multiplier = 2 if strength_level >= 35 else 1
+        # Strength 15: Complete 2 debauchery tasks on quest completion
+        if strength_level >= 15:
+            await increment_player_x(state, 'debauchery_avail', 2)
+            await ctx_print(state, "Skill bonus! Take the Edge Off: You completed 2 debauchery tasks.")
+        if complete_result in ('easy', 'medium', 'hard'):
+            await increment_player_x(state, f'{complete_result}_quest', 1)
+            await increment_player_x(state, f'{complete_result}_quest_points', item_multiplier)
+            await award_xp(state, quest_xp[complete_result], double_allowed=False)
+            if item_multiplier == 2:
+                await ctx_print(state, "Skill bonus! Strength Mastery: You received double quest item points.")
+        return complete_result
+    else:
+        # if the quest was not completed, check for item abilities to skip steps
+        # Elven Compass (e1) - 25% chance to skip an exploration quest step
+        if await inventory_contains(state, 'e1') and random.random() < 0.25 and task_type == 'exploration':
+            await ctx_print(state, "Item bonus! Elven Compass: You skipped an exploration quest step.")
+            await quest.progress_quest(state)
+        # Invisibility Cloak (e2) - 25% chance to skip a combat quest step
+        elif await inventory_contains(state, 'e2') and random.random() < 0.25 and task_type == 'combat':
+            await ctx_print(state, "Item bonus! Invisibility Cloak: You skipped a combat quest step.")
+            await quest.progress_quest(state)
+        # Lockpick Set (e3) - 25% chance to skip a puzzle quest step
+        elif await inventory_contains(state, 'e3') and random.random() < 0.25 and task_type == 'puzzle':
+            await ctx_print(state, "Item bonus! Lockpick Set: You skipped a puzzle-solving quest step.")
+            await quest.progress_quest(state)
+        # Silver Tongue (e4) - 25% chance to skip a dialogue quest step
+        elif await inventory_contains(state, 'e4') and random.random() < 0.25 and task_type == 'dialogue':
+            await ctx_print(state, "Item bonus! Silver Tongue: You skipped a dialogue quest step.")
+            await quest.progress_quest(state)
+        # Lucky Rabbit's Foot (m10) - 15% chance to skip any quest step
+        elif await inventory_contains(state, 'm10') and random.random() < 0.15:
+            await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
+            await quest.progress_quest(state)
+    return
 
 async def abandon_quest(state):
 	#check if the player has a quest
