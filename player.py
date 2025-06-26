@@ -45,7 +45,7 @@ async def init(state):
 # Tasks
 #----------------------------------
 
-async def log_task(state, task_name):
+async def log_task(state, task_name, rune_of_rep=False):
     # Check for skill-based extra task completion
     extra_task = False
     extra_task_type = None
@@ -53,6 +53,13 @@ async def log_task(state, task_name):
     strength_level = await get_player_x(state, 'strength_level')
     agility_level = await get_player_x(state, 'agility_level')
     wisdom_level = await get_player_x(state, 'wisdom_level')
+
+    # Runestone of Repetition (d3): 30% chance to complete each Task twice
+    if not rune_of_rep and await inventory_contains(state, 'd3') and random.random() < 0.3: #avoid runestone activating off of a runestone proc
+        # Log the task twice
+        await ctx_print(state, "Item bonus! Runestone of Repetition: You completed this task twice!")
+        await log_task(state, task_name)
+        return
 
     # Strength 3: 25% chance for extra combat task
     if task_name[0] == 'c' and strength_level >= 3:
@@ -307,7 +314,10 @@ async def progress_quest(state):
         'medium': 200,
         'hard': 400
     }
-    if complete_result:
+    if complete_result: # the quest was completed
+        # Increment the quest completion count
+        await increment_player_x(state, f'{complete_result}_quest', 1)
+
         # Strength 35: Double the number of items you get from quest rewards
         strength_level = await get_player_x(state, 'strength_level')
         item_multiplier = 2 if strength_level >= 35 else 1
@@ -327,23 +337,27 @@ async def progress_quest(state):
         # Elven Compass (e1) - 25% chance to skip an exploration quest step
         if await inventory_contains(state, 'e1') and random.random() < 0.25 and task_type == 'exploration':
             await ctx_print(state, "Item bonus! Elven Compass: You skipped an exploration quest step.")
-            await quest.progress_quest(state)
+            complete_result = await quest.progress_quest(state)
         # Invisibility Cloak (e2) - 25% chance to skip a combat quest step
         elif await inventory_contains(state, 'e2') and random.random() < 0.25 and task_type == 'combat':
             await ctx_print(state, "Item bonus! Invisibility Cloak: You skipped a combat quest step.")
-            await quest.progress_quest(state)
+            complete_result = await quest.progress_quest(state)
         # Lockpick Set (e3) - 25% chance to skip a puzzle quest step
         elif await inventory_contains(state, 'e3') and random.random() < 0.25 and task_type == 'puzzle':
             await ctx_print(state, "Item bonus! Lockpick Set: You skipped a puzzle-solving quest step.")
-            await quest.progress_quest(state)
+            complete_result = await quest.progress_quest(state)
         # Silver Tongue (e4) - 25% chance to skip a dialogue quest step
         elif await inventory_contains(state, 'e4') and random.random() < 0.25 and task_type == 'dialogue':
             await ctx_print(state, "Item bonus! Silver Tongue: You skipped a dialogue quest step.")
-            await quest.progress_quest(state)
+            complete_result = await quest.progress_quest(state)
         # Lucky Rabbit's Foot (m10) - 15% chance to skip any quest step
-        elif await inventory_contains(state, 'm10') and random.random() < 0.15:
+        if not complete_result and await inventory_contains(state, 'm10') and random.random() < 0.15:
+            complete_result = await quest.progress_quest(state)
             await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
-            await quest.progress_quest(state)
+        # Magic Rune (d5): 30% chance to complete an additional quest step when you complete a quest step
+        if not complete_result and await inventory_contains(state, 'd5') and random.random() < 0.3:
+            complete_result = await quest.progress_quest(state)
+            await ctx_print(state, "Item bonus! Magic Rune: You completed an additional quest step.")
     return
 
 async def abandon_quest(state):
