@@ -99,6 +99,7 @@ async def log_task(state, task_name, rune_of_rep=False):
     # Check for skill-based extra task completion
     extra_task = False
     extra_task_type = None
+    
     # Get player skill levels
     strength_level = await get_player_x(state, 'strength_level')
     agility_level = await get_player_x(state, 'agility_level')
