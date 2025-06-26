@@ -98,15 +98,17 @@ async def random_with_bonus(state):
 
     bonus = 0.
 
+    agility_level = await get_player_x(state, 'agility_level')
+    mult = 2 if agility_level > 35 else 1 #a couple edge cases for Agility Master
+
     # Tankard of Tenacity (d7): +0.02 per banked debauchery task
     if await inventory_contains(state, 'd7'):
         debauchery = await get_player_x(state, 'debauchery_avail')
-        bonus += debauchery * 0.02
+        bonus += debauchery * 0.02 * mult
 
     # Sleight of Hand (Agility 15): +0.15 to all percentage-based effects
-    agility_level = await get_player_x(state, 'agility_level')
     if agility_level >= 15:
-        bonus += 0.15
+        bonus += 0.15 * mult
 
     # Agility Master (Agility 35): Double the base percentage of all item and skills
     if agility_level >= 35:
