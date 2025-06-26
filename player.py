@@ -45,6 +45,28 @@ async def init(state):
 # Tasks
 #----------------------------------
 
+async def increment_task(state, task_name, n=1, log_task=True):
+    # Increment the task count for the specified task
+    if task_name[0] == 'e':
+        await increment_player_x(state, 'exploration_avail', n)
+    elif task_name[0] == 'c':
+        await increment_player_x(state, 'combat_avail', n)
+    elif task_name[0] == 'p':
+        await increment_player_x(state, 'puzzle_avail', n)
+    elif task_name[0] == 'd':
+        await increment_player_x(state, 'dialogue_avail', n)
+    elif task_name[0] == 'b':
+        await increment_player_x(state, 'debauchery_avail', n)
+        # Strength 1: Completing a Debauchery Task also provides +2 XP
+        strength_level = await get_player_x(state, 'strength_level')
+        if strength_level >= 1:
+            await award_xp(state, 2)
+
+    if log_task:
+        # Log the task in the database
+        async with state.bot.pool.acquire() as con:
+            await con.execute(f"UPDATE data SET last_logged_task = '{task_name}' WHERE name = '{state.player}'")
+
 async def log_task(state, task_name, rune_of_rep=False):
     # Check for skill-based extra task completion
     extra_task = False
@@ -83,47 +105,22 @@ async def log_task(state, task_name, rune_of_rep=False):
             extra_task_type = 'puzzle_avail'
 
     # Normal task logging
-    if task_name[0] == 'e':
-        await increment_player_x(state, 'exploration_avail', 1)
-    elif task_name[0] == 'c':
-        await increment_player_x(state, 'combat_avail', 1)
-    elif task_name[0] == 'p':
-        await increment_player_x(state, 'puzzle_avail', 1)
-    elif task_name[0] == 'd':
-        await increment_player_x(state, 'dialogue_avail', 1)
-    elif task_name[0] == 'b':
-        await increment_player_x(state, 'debauchery_avail', 1)
-        # Strength 1: Completing a Debauchery Task also provides +2 XP
-        if strength_level >= 1:
-            await award_xp(state, 2)
-
+    await increment_task(state, task_name)
+    
     # Apply extra task if triggered
     if extra_task and extra_task_type:
-        await increment_player_x(state, extra_task_type, 1)
+        await increment_task(state, extra_task_type[0], log_task=False)
         await ctx_print(state, f"Skill bonus! You completed an extra {extra_task_type.split('_')[0]} task.")
-
-    # Log the task in the database
-    async with state.bot.pool.acquire() as con:
-        await con.execute(f"UPDATE data SET last_logged_task = '{task_name}' WHERE name = '{state.player}'")
 
 async def remove_task(state, task_name):
 	#remove the task from the player's available tasks
-	if task_name[0] == 'e':
-		await increment_player_x(state, 'exploration_avail', -1)
-	elif task_name[0] == 'c':
-		await increment_player_x(state, 'combat_avail', -1)
-	elif task_name[0] == 'p':
-		await increment_player_x(state, 'puzzle_avail', -1)
-	elif task_name[0] == 'd':
-		await increment_player_x(state, 'dialogue_avail', -1)
-	elif task_name[0] == 'b':
-		await increment_player_x(state, 'debauchery_avail', -1)
+    await increment_player_x(state, task_name, -1, log_task=False)
 
 	#clear the last_logged_task from the database
-	async with state.bot.pool.acquire() as con:
-		await con.execute(f"UPDATE data SET last_logged_task = '' WHERE name = '{state.player}'")
+    async with state.bot.pool.acquire() as con:
+        await con.execute(f"UPDATE data SET last_logged_task = '' WHERE name = '{state.player}'")
 	
-	await state.ctx.response.send_message(f"Removed task: {task_name}")
+    await state.ctx.response.send_message(f"Removed task: {task_name}")
 
 async def get_last_logged_task(state):
 	#check if the player has a last logged task
@@ -324,7 +321,7 @@ async def progress_quest(state, skip_task_check=False):
         item_multiplier = 2 if strength_level >= 35 else 1
         # Strength 15: Complete 2 debauchery tasks on quest completion
         if strength_level >= 15:
-            await increment_player_x(state, 'debauchery_avail', 2)
+            await increment_task(state, 'b', 2, log_task=False)
             await ctx_print(state, "Skill bonus! Take the Edge Off: You completed 2 debauchery tasks.")
         if complete_result in ('easy', 'medium', 'hard'):
             await increment_player_x(state, f'{complete_result}_quest', 1)
@@ -372,17 +369,19 @@ async def abandon_quest(state):
 	quest = await Quest.from_state(state)
 	await quest.abandon_quest(state)
 
-async def complete_sidequest(state, task_type):
+async def complete_sidequest(state, task_type, skip_task_check=False):
     # Agility 10: Sidequests require only 2 non-Debauchery Tasks
     agility_level = await get_player_x(state, 'agility_level')
     required_tasks = 2 if agility_level >= 10 else 3
-    #check if the player has enough banked tasks to complete the sidequest
-    if await get_player_x(state, 'debauchery_avail') < 1:
-        await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
-        return
-    if await get_player_x(state, f"{task_type}_avail") < required_tasks:
-        await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
-        return
+
+    if not skip_task_check:
+        #check if the player has enough banked tasks to complete the sidequest
+        if await get_player_x(state, 'debauchery_avail') < 1:
+            await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
+            return
+        if await get_player_x(state, f"{task_type}_avail") < required_tasks:
+            await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
+            return
     
     #generate the quest message
     sidequest_message = await conversation.ai_get_response(
@@ -443,46 +442,64 @@ async def complete_sidequest(state, task_type):
 # Items
 #----------------------------------
 async def buy_item(state, item_id):
-	item_id = item_id.lower()  #ensure the first letter is lowercase
+    item_id = item_id.lower()  #ensure the first letter is lowercase
 
-	#check that the item id has the correct format
-	if item_id[0] not in ('e', 'm', 'h'):
-		await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
-		return
+    #check that the item id has the correct format
+    if item_id[0] not in ('e', 'm', 'h'):
+        await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
+        return
 
-	#check if the player has enough item points for that tier of item
-	if item_id[0] == 'e':
-		if await get_player_x(state, 'easy_quest_points') < 1:
-			await state.ctx.response.send_message("Error: Not enough easy quest points to buy this item.")
-			return
-	elif item_id[0] == 'm':
-		if await get_player_x(state, 'medium_quest_points') < 1:
-			await state.ctx.response.send_message("Error: Not enough medium quest points to buy this item.")
-			return
-	elif item_id[0] == 'h':
-		if await get_player_x(state, 'hard_quest_points') < 1:
-			await state.ctx.response.send_message("Error: Not enough hard quest points to buy this item.")
-			return
+    #check if the player has enough item points for that tier of item
+    if item_id[0] == 'e':
+        if await get_player_x(state, 'easy_quest_points') < 1:
+            await state.ctx.response.send_message("Error: Not enough easy quest points to buy this item.")
+            return
+    elif item_id[0] == 'm':
+        if await get_player_x(state, 'medium_quest_points') < 1:
+            await state.ctx.response.send_message("Error: Not enough medium quest points to buy this item.")
+            return
+    elif item_id[0] == 'h':
+        if await get_player_x(state, 'hard_quest_points') < 1:
+            await state.ctx.response.send_message("Error: Not enough hard quest points to buy this item.")
+            return
 
-	#check if the player already has that item 
-	if await inventory_contains(state, item_id):
-		await state.ctx.response.send_message("Error: You already have this item.")
-		return
+    #check if the player already has that item 
+    if await inventory_contains(state, item_id):
+        await state.ctx.response.send_message("Error: You already have this item.")
+        return
 
-	#add the item to the player's inventory
-	inventory_text = await get_player_x(state, 'inventory')
-	if inventory_text:
-		inventory_text += f",{item_id}"
-	else:
-		inventory_text = item_id
-	await set_player_x(state, 'inventory', inventory_text)
+    #add the item to the player's inventory
+    inventory_text = await get_player_x(state, 'inventory')
+    if inventory_text:
+        inventory_text += f",{item_id}"
+    else:
+        inventory_text = item_id
+    await set_player_x(state, 'inventory', inventory_text)
 
-	#decrement the player's quest points
-	if item_id[0] == 'e':
-		await increment_player_x(state, 'easy_quest_points', -1)
-	elif item_id[0] == 'm':
-		await increment_player_x(state, 'medium_quest_points', -1)
-	elif item_id[0] == 'h':
-		await increment_player_x(state, 'hard_quest_points', -1)
-	await state.ctx.response.send_message(f"You have purchased {get_item_name(item_id)}.")
+    # Immediate effect items
+    if item_id == 'e6': #Beer Belly +1
+        await increment_task(state, 'b', 10, log_task=False) 
+        await ctx_print(state, "Item bonus! Beer Belly +1: You immediately completed 10 Debauchery Tasks.")
+
+    elif item_id == 'e8': # Magic Mirror
+        sidequest_types = ['exploration', 'combat', 'puzzle', 'dialogue']
+        chosen_type = random.choice(sidequest_types)
+        await ctx_print(state, f"Item bonus! Sidequest Map: You immediately completed a {chosen_type} sidequest.")
+        await complete_sidequest(state, chosen_type, skip_task_check=True)
+
+    elif item_id == 'e9': # Emergency Rations
+        await increment_task(state, 'e', 2, log_task=False)
+        await increment_task(state, 'c', 2, log_task=False)
+        await increment_task(state, 'p', 2, log_task=False)
+        await increment_task(state, 'd', 2, log_task=False)
+        await ctx_print(state, "Item bonus! Emergency Rations: You immediately completed 2 of each non-Debauchery Task.")
+
+    #decrement the player's quest points
+    if item_id[0] == 'e':
+        await increment_player_x(state, 'easy_quest_points', -1)
+    elif item_id[0] == 'm':
+        await increment_player_x(state, 'medium_quest_points', -1)
+    elif item_id[0] == 'h':
+        await increment_player_x(state, 'hard_quest_points', -1)
+    await state.ctx.response.send_message(f"You have purchased {get_item_name(item_id)}.")
 
