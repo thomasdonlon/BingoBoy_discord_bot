@@ -186,13 +186,18 @@ async def award_xp(state, xp_amount, double_allowed=True):
 
 async def level_up(state):
     await increment_player_x(state, 'level', 1)
-    await increment_player_x(state, 'skill_points', await get_player_x(state, 'level'))
+    skill_points_to_add = await get_player_x(state, 'level')
+    # m9: Robe of Stars - Gain 1 additional skill point when you level up
+    if await inventory_contains(state, 'm9'):
+        skill_points_to_add += 1
+        await ctx_print(state, "Item bonus! Robe of Stars: You gained 1 extra skill point for leveling up!")
+    await increment_player_x(state, 'skill_points', skill_points_to_add)
     # Wisdom 10: Gain an additional 50 XP when you level up
     wisdom_level = await get_player_x(state, 'wisdom_level')
     if wisdom_level >= 10:
         await award_xp(state, 50)
         await ctx_print(state, "Skill bonus! Gifted: You gained 50 bonus XP for leveling up.")
-    await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
+    await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {skill_points_to_add} skill points to spend on skills.")
 
 #----------------------------------
 # Skills
