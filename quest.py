@@ -92,16 +92,30 @@ class Quest:
     #---------------------------------------
 
     async def generate_new_tasks(self, state):
-        
-        if self.difficulty == 'easy':
-            self.current_step_num_tasks = random.randint(2,3)
-            self.current_step_num_deb_tasks = random.randint(1,2)
-        elif self.difficulty == 'medium':
-            self.current_step_num_tasks = random.randint(2,4)
-            self.current_step_num_deb_tasks = random.randint(2,3)
-        elif self.difficulty == 'hard':
-            self.current_step_num_tasks = random.randint(3,5)
-            self.current_step_num_deb_tasks = random.randint(2,5)
+
+        # d6: Scrying Orb - Quest steps always require the smallest number of tasks possible
+        if await inventory_contains(state, 'd6'):
+            if self.difficulty == 'easy':
+                self.current_step_num_tasks = 2
+                self.current_step_num_deb_tasks = 1
+            elif self.difficulty == 'medium':
+                self.current_step_num_tasks = 2
+                self.current_step_num_deb_tasks = 2
+            elif self.difficulty == 'hard':
+                self.current_step_num_tasks = 3
+                self.current_step_num_deb_tasks = 2
+
+        else:
+        # Set the number of tasks normally based on the difficulty level
+            if self.difficulty == 'easy':
+                self.current_step_num_tasks = random.randint(2,3)
+                self.current_step_num_deb_tasks = random.randint(1,2)
+            elif self.difficulty == 'medium':
+                self.current_step_num_tasks = random.randint(2,4)
+                self.current_step_num_deb_tasks = random.randint(2,3)
+            elif self.difficulty == 'hard':
+                self.current_step_num_tasks = random.randint(3,5)
+                self.current_step_num_deb_tasks = random.randint(2,5)
 
         # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
         if await inventory_contains(state, 'm5'):
