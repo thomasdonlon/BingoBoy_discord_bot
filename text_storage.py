@@ -108,7 +108,7 @@ item_descriptions = {
     'm5': r"Cursed Keg: Quests give 50% more XP, but require twice as many Debauchery Tasks.",
     'm6': r"Skill Shard: Immediately gain XP equal to your current level x 50.",
     'm7': r"Game Genie Totem: Completing a sidequest completes 1 of each type of non-Debauchery Task.",
-    'm8': r"Scroll of Misty Step: Start each quest on the 2nd step.",
+    'm8': r"Scroll of Misty Step: Start each quest on the 2nd step. (Except the Drunken Dragon quest)",
     'm9': r"Robe of Stars: Gain 1 additional skill point when you level up.",
     'm10': r"Lucky Rabbit's Foot: You have a 15% chance to automatically skip each quest step.",
     'd1': r"Map of Many Sips: Debauchery Tasks will be used to cover any missing non-Debauchery Tasks when completing sidequests.",

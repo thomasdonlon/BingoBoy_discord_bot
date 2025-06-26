@@ -8,38 +8,38 @@ import random
 
 #initialize the channel/player
 async def init(state):
-	async with state.bot.pool.acquire() as con:   
-		await con.execute(f'''CREATE TABLE IF NOT EXISTS data (
-						
-				name				  VARCHAR PRIMARY KEY NOT NULL,
-				level                 INT DEFAULT 1,
-				xp                    INT DEFAULT 0,
-				easy_quest            INT DEFAULT 0,
-				medium_quest          INT DEFAULT 0,
-				hard_quest            INT DEFAULT 0,
-				easy_quest_points     INT DEFAULT 0,
-				medium_quest_points   INT DEFAULT 0,
-				hard_quest_points     INT DEFAULT 0,
-				sidequest             INT DEFAULT 0,
-				strength_level        INT DEFAULT 0,
-				agility_level         INT DEFAULT 0,
-				wisdom_level          INT DEFAULT 0,
-				skill_points          INT DEFAULT 1,
-				exploration_avail     INT DEFAULT 0,
-				combat_avail          INT DEFAULT 0,
-				puzzle_avail          INT DEFAULT 0,
-				dialogue_avail        INT DEFAULT 0,
-				debauchery_avail      INT DEFAULT 0,
-				inventory             TEXT DEFAULT '',
-				current_quest         TEXT DEFAULT NULL,
-				last_logged_task      VARCHAR DEFAULT '',
+    async with state.bot.pool.acquire() as con:   
+        await con.execute(f'''CREATE TABLE IF NOT EXISTS data (
+                        
+                name                  VARCHAR PRIMARY KEY NOT NULL,
+                level                 INT DEFAULT 1,
+                xp                    INT DEFAULT 0,
+                easy_quest            INT DEFAULT 0,
+                medium_quest          INT DEFAULT 0,
+                hard_quest            INT DEFAULT 0,
+                easy_quest_points     INT DEFAULT 0,
+                medium_quest_points   INT DEFAULT 0,
+                hard_quest_points     INT DEFAULT 0,
+                sidequest             INT DEFAULT 0,
+                strength_level        INT DEFAULT 0,
+                agility_level         INT DEFAULT 0,
+                wisdom_level          INT DEFAULT 0,
+                skill_points          INT DEFAULT 1,
+                exploration_avail     INT DEFAULT 0,
+                combat_avail          INT DEFAULT 0,
+                puzzle_avail          INT DEFAULT 0,
+                dialogue_avail        INT DEFAULT 0,
+                debauchery_avail      INT DEFAULT 0,
+                inventory             TEXT DEFAULT '',
+                current_quest         TEXT DEFAULT NULL,
+                last_logged_task      VARCHAR DEFAULT '',
                 sq_xp_bonus         INT DEFAULT 0
-				)''')
+                )''')
 
-		#initialize the player data if it doesn't exist
-		await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
+        #initialize the player data if it doesn't exist
+        await con.execute(f"INSERT INTO data(name) VALUES('{state.player}') ON CONFLICT DO NOTHING")
 
-		print(f"Initialized channel: {state.player}")
+        print(f"Initialized channel: {state.player}")
 
 #----------------------------------
 # Tasks
@@ -113,126 +113,132 @@ async def log_task(state, task_name, rune_of_rep=False):
         await ctx_print(state, f"Skill bonus! You completed an extra {extra_task_type.split('_')[0]} task.")
 
 async def remove_task(state, task_name):
-	#remove the task from the player's available tasks
+    #remove the task from the player's available tasks
     await increment_player_x(state, task_name, -1, log_task=False)
 
-	#clear the last_logged_task from the database
+    #clear the last_logged_task from the database
     async with state.bot.pool.acquire() as con:
         await con.execute(f"UPDATE data SET last_logged_task = '' WHERE name = '{state.player}'")
-	
+    
     await state.ctx.response.send_message(f"Removed task: {task_name}")
 
 async def get_last_logged_task(state):
-	#check if the player has a last logged task
-	last_logged_task = await get_player_x(state, 'last_logged_task')
-	if not last_logged_task:
-		await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.", ephemeral=True)
-		return
+    #check if the player has a last logged task
+    last_logged_task = await get_player_x(state, 'last_logged_task')
+    if not last_logged_task:
+        await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.", ephemeral=True)
+        return
 
-	return last_logged_task 
+    return last_logged_task 
 
 #----------------------------------
 # Leveling
 #----------------------------------
 async def award_xp(state, xp_amount, double_allowed=True):
-	wisdom_level = await get_player_x(state, 'wisdom_level')
-	if double_allowed and wisdom_level >= 35: # Wisdom 35: Mastery: Doubles all XP gains
-		xp_amount *= 2
-	current_xp = await increment_player_x(state, 'xp', xp_amount)
+    wisdom_level = await get_player_x(state, 'wisdom_level')
+    if double_allowed and wisdom_level >= 35: # Wisdom 35: Mastery: Doubles all XP gains
+        xp_amount *= 2
+    current_xp = await increment_player_x(state, 'xp', xp_amount)
 
-	#level up if you hit an xp threshold
-	for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
-		if current_xp - xp_amount < threshold <= current_xp:
-			await level_up(state)
+    #level up if you hit an xp threshold
+    for threshold in xp_level_thresholds: #catches multiple level ups from one xp drop
+        if current_xp - xp_amount < threshold <= current_xp:
+            await level_up(state)
 
-	#print an xp award message
-	await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
+    #print an xp award message
+    await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
 
 async def level_up(state):
-	await increment_player_x(state, 'level', 1)
-	await increment_player_x(state, 'skill_points', await get_player_x(state, 'level'))
-	# Wisdom 10: Gain an additional 50 XP when you level up
-	wisdom_level = await get_player_x(state, 'wisdom_level')
-	if wisdom_level >= 10:
-		await award_xp(state, 50)
-		await ctx_print(state, "Skill bonus! Gifted: You gained 50 bonus XP for leveling up.")
-	await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
+    await increment_player_x(state, 'level', 1)
+    await increment_player_x(state, 'skill_points', await get_player_x(state, 'level'))
+    # Wisdom 10: Gain an additional 50 XP when you level up
+    wisdom_level = await get_player_x(state, 'wisdom_level')
+    if wisdom_level >= 10:
+        await award_xp(state, 50)
+        await ctx_print(state, "Skill bonus! Gifted: You gained 50 bonus XP for leveling up.")
+    await ctx_print(state, f"You have leveled up! You are now level {await get_player_x(state, 'level')}.\nYou have gained {await get_player_x(state, 'level')} skill points to spend on skills.")
 
 #----------------------------------
 # Skills
 #----------------------------------
 async def allocate_skill_points(state, skill_name, number): #TODO: on level up, when they get a new skill, say that they learned a new skill and display that skill's text
 
-	#check if the level is valid
-	if number < 1:
-		await state.ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
-		return
+    #check if the level is valid
+    if number < 1:
+        await state.ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
+        return
 
-	#check that the player has enough skill points
-	current_skill_points = await get_player_x(state, 'skill_points')
-	if (current_skill_points == 0) or (current_skill_points < number):
-		await state.ctx.response.send_message("Error: Not enough skill points in pool.", ephemeral=True)
-		return
+    #check that the player has enough skill points
+    current_skill_points = await get_player_x(state, 'skill_points')
+    if (current_skill_points == 0) or (current_skill_points < number):
+        await state.ctx.response.send_message("Error: Not enough skill points in pool.", ephemeral=True)
+        return
 
-	#check that the input is valid
-	if skill_name not in ('strength', 's', 'agility', 'a', 'wisdom', 'w'):
-		await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').", ephemeral=True)
-		return
+    #check that the input is valid
+    if skill_name not in ('strength', 's', 'agility', 'a', 'wisdom', 'w'):
+        await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').", ephemeral=True)
+        return
 
-	#clean input
-	if skill_name in ('strength', 's'):
-		skill_name = 'strength'
-	elif skill_name in ('agility', 'a'):
-		skill_name = 'agility'
-	elif skill_name in ('wisdom', 'w'):
-		skill_name = 'wisdom'
+    #clean input
+    if skill_name in ('strength', 's'):
+        skill_name = 'strength'
+    elif skill_name in ('agility', 'a'):
+        skill_name = 'agility'
+    elif skill_name in ('wisdom', 'w'):
+        skill_name = 'wisdom'
 
-	#make sure that the player is not trying to increment their skill level above 35
-	old_skill_level = await get_player_x(state, f"{skill_name}_level")
-	if old_skill_level == 35:
-		state.ctx.response.send_message(f"{skill_name} is already at max level!")
-		return
+    #make sure that the player is not trying to increment their skill level above 35
+    old_skill_level = await get_player_x(state, f"{skill_name}_level")
+    if old_skill_level == 35:
+        state.ctx.response.send_message(f"{skill_name} is already at max level!")
+        return
 
-	elif old_skill_level + number > 35:
-		number = 35 - old_skill_level
-		state.ctx.response.send_message(f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
+    elif old_skill_level + number > 35:
+        number = 35 - old_skill_level
+        state.ctx.response.send_message(f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
 
-	#increment the skill level with a little message
-	output_dict = {
-		'strength': 'stronger',
-		'agility': 'faster',
-		'wisdom': 'smarter'
-	}
-	new_skill_level = await increment_player_x(state, f"{skill_name}_level", number)
-	await state.ctx.response.send_message(f"You have reached {skill_name} level {new_skill_level}! Your party grows {output_dict[skill_name]}.")
+    #increment the skill level with a little message
+    output_dict = {
+        'strength': 'stronger',
+        'agility': 'faster',
+        'wisdom': 'smarter'
+    }
+    new_skill_level = await increment_player_x(state, f"{skill_name}_level", number)
+    await state.ctx.response.send_message(f"You have reached {skill_name} level {new_skill_level}! Your party grows {output_dict[skill_name]}.")
 
-	#if the skill level crossed one or more thresholds, display the descriptions for the new skills
-	for threshold in skill_level_thresholds:
-		if old_skill_level < threshold <= new_skill_level:
-			skill_description = get_skill_description(skill_name, threshold)
-			await ctx_print(state, f"New skill unlocked:\n{skill_description}")
-			# Wisdom 28: Epiphany: Immediately gain 500 XP. This XP cannot be boosted by other skills or items.
-			if skill_name == 'wisdom' and threshold == 28:
-				await increment_player_x(state, 'xp', 500)
-				await ctx_print(state, "Skill bonus! Epiphany: You immediately gain 500 XP (not boosted by other effects).")
+    #if the skill level crossed one or more thresholds, display the descriptions for the new skills
+    for threshold in skill_level_thresholds:
+        if old_skill_level < threshold <= new_skill_level:
+            skill_description = get_skill_description(skill_name, threshold)
+            await ctx_print(state, f"New skill unlocked:\n{skill_description}")
+            # Wisdom 28: Epiphany: Immediately gain 500 XP. This XP cannot be boosted by other skills or items.
+            if skill_name == 'wisdom' and threshold == 28:
+                await increment_player_x(state, 'xp', 500)
+                await ctx_print(state, "Skill bonus! Epiphany: You immediately gain 500 XP (not boosted by other effects).")
 
-	#decrement the skill points
-	await increment_player_x(state, 'skill_points', -number)
+    #decrement the skill points
+    await increment_player_x(state, 'skill_points', -number)
 
 #----------------------------------
 # Questing
 #----------------------------------
 
 async def start_quest(state, difficulty):
-	#if difficulty is 'drunken-dragon', check that the player is level 10
-	if difficulty == 'drunken-dragon':
-		current_level = await get_player_x(state, 'level')
-		if current_level < 10:
-			await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
-			return
+    #if difficulty is 'drunken-dragon', check that the player is level 10
+    if difficulty == 'drunken-dragon':
+        current_level = await get_player_x(state, 'level')
+        if current_level < 10:
+            await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
+            return
 
-	#initialize the quest object (starts the quest and writes it to the database)
-	await Quest.create(state, difficulty)
+    #initialize the quest object (starts the quest and writes it to the database)
+    await Quest.create(state, difficulty)
+
+    # Scroll of Misty Step (m8): Start each quest on the 2nd step
+    if difficulty != 'drunken-dragon' and await inventory_contains(state, 'm8'):
+        await ctx_print(state, "Item bonus! Scroll of Misty Step: You start this quest on the 2nd step.")
+        quest = await Quest.from_state(state)
+        quest.current_step_num = 2
 
 async def progress_quest(state, skip_task_check=False):
     # check if the player has a quest
@@ -359,15 +365,15 @@ async def progress_quest(state, skip_task_check=False):
     return
 
 async def abandon_quest(state):
-	#check if the player has a quest
-	current_quest = await get_player_x(state, 'current_quest')
-	if not current_quest:
-		await state.ctx.response.send_message("Error: You do not have an active quest.")
-		return
+    #check if the player has a quest
+    current_quest = await get_player_x(state, 'current_quest')
+    if not current_quest:
+        await state.ctx.response.send_message("Error: You do not have an active quest.")
+        return
 
-	#abandon the quest
-	quest = await Quest.from_state(state)
-	await quest.abandon_quest(state)
+    #abandon the quest
+    quest = await Quest.from_state(state)
+    await quest.abandon_quest(state)
 
 async def complete_sidequest(state, task_type, skip_task_check=False):
     # Agility 10: Sidequests require only 2 non-Debauchery Tasks
@@ -408,10 +414,10 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         sq_xp_bonus += 10
         await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
 
-	# Award the main XP for completing the sidequest
+    # Award the main XP for completing the sidequest
     await award_xp(state, sq_xp_bonus, double_allowed=False)
 
-	# Wisdom 5: Scrying Eye: Receive 5 bonus XP whenever you complete a sidequest
+    # Wisdom 5: Scrying Eye: Receive 5 bonus XP whenever you complete a sidequest
     if wisdom_level >= 5:
         await award_xp(state, 5)
         await ctx_print(state, f"Skill bonus! Scrying Eye: You gained bonus XP for this sidequest.")
@@ -435,6 +441,14 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         rarity = random.choice(['easy_quest_points', 'medium_quest_points', 'hard_quest_points'])
         await increment_player_x(state, rarity, 1)
         await ctx_print(state, f"Skill bonus! You gained a {rarity.replace('_', ' ').title()}.")
+
+    # Game Genie Totem (m7): Completing a sidequest completes 1 of each type of non-Debauchery Task
+    if await inventory_contains(state, 'm7'):
+        await increment_task(state, 'e', 1, log_task=False)
+        await increment_task(state, 'c', 1, log_task=False)
+        await increment_task(state, 'p', 1, log_task=False)
+        await increment_task(state, 'd', 1, log_task=False)
+        await ctx_print(state, "Item bonus! Game Genie Totem: You completed 1 of each non-Debauchery Task.")
 
     await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
 
@@ -493,6 +507,12 @@ async def buy_item(state, item_id):
         await increment_task(state, 'p', 2, log_task=False)
         await increment_task(state, 'd', 2, log_task=False)
         await ctx_print(state, "Item bonus! Emergency Rations: You immediately completed 2 of each non-Debauchery Task.")
+
+    elif item_id == 'm6': # Skill Shard
+        current_level = await get_player_x(state, 'level')
+        xp_award = current_level * 50
+        await award_xp(state, xp_award)
+        await ctx_print(state, f"Item bonus! Skill Shard: You immediately gained {xp_award} XP (Level {current_level} x 50 XP).")
 
     #decrement the player's quest points
     if item_id[0] == 'e':
