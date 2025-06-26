@@ -47,10 +47,17 @@ async def init(state):
 
 async def increment_task(state, task_name, n=1, log_task=True):
     # Increment the task count for the specified task
-    # e7: Lucky Coin - 10% chance to provide 10 XP when you complete a non-Debauchery Task
-    if task_name[0] != 'b' and await inventory_contains(state, 'e7') and random.random() < 0.10:
-        await award_xp(state, 10)
-        await ctx_print(state, "Item bonus! Lucky Coin: You gained 10 XP!")
+    
+    #things that proc for non-debauchery tasks
+    if task_name[0] != 'b':
+        # e7: Lucky Coin - 10% chance to provide 10 XP when you complete a non-Debauchery Task
+        if await inventory_contains(state, 'e7') and random.random() < 0.10:
+            await award_xp(state, 10)
+            await ctx_print(state, "Item bonus! Lucky Coin: You gained 10 XP!")
+        # e5: Strength Potion - 10% chance to complete a Combat Task whenever you complete a non-Debauchery Task
+        if await inventory_contains(state, 'e5') and random.random() < 0.10:
+            await increment_task(state, 'c', 1, log_task=False)
+            await ctx_print(state, "Item bonus! Strength Potion: You completed a bonus Combat Task!")
 
     if task_name[0] == 'e':
         await increment_player_x(state, 'exploration_avail', n)
@@ -279,18 +286,12 @@ async def progress_quest(state, skip_task_check=False):
     # read the quest from the database
     quest = await Quest.from_state(state)
 
-    # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
-    if not skip_task_check and await inventory_contains(state, 'm5'):
-        n_deb_tasks_needed = quest.current_step_num_deb_tasks * 2
-        await ctx_print(state, "Item bonus! Cursed Keg: Debauchery Task requirement doubled for this quest step.")
-    else:
-        n_deb_tasks_needed = quest.current_step_num_deb_tasks
-
     if not skip_task_check:
         # check that the player has enough banked tasks to progress the quest
         # and deduct the tasks from the player's available tasks
         task_type = quest.current_step_type
         n_tasks_needed = quest.current_step_num_tasks
+        n_deb_tasks_needed = quest.current_step_num_deb_tasks
 
         # check debauchery tasks first
         if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
@@ -426,26 +427,41 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
     required_tasks = 2 if agility_level >= 10 else 3
 
     if not skip_task_check:
-        #check if the player has enough banked tasks to complete the sidequest
-        if await get_player_x(state, 'debauchery_avail') < 1:
-            await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
-            return
-        if await get_player_x(state, f"{task_type}_avail") < required_tasks:
-            await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
-            return
     
+        # d1: Map of Many Sips - Debauchery Tasks will be used to cover any missing non-Debauchery Tasks when completing sidequests
+        non_deb_tasks_available = await get_player_x(state, f"{task_type}_avail")
+        debauchery_available = await get_player_x(state, 'debauchery_avail')
+        non_deb_to_spend = min(non_deb_tasks_available, required_tasks)
+        debauchery_to_spend = 1
+        if await inventory_contains(state, 'd1'):
+            # Use debauchery tasks to cover any missing non-debauchery tasks
+            missing = required_tasks - non_deb_tasks_available
+            if missing > 0:
+                if debauchery_available < (1 + missing):
+                    await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest (including covering missing non-debauchery tasks).")
+                    return
+                debauchery_to_spend += missing
+                non_deb_to_spend = non_deb_tasks_available
+        else:
+            #normal check if the player has enough banked tasks to complete the sidequest
+            if debauchery_available < 1:
+                await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
+                return
+            if non_deb_tasks_available < required_tasks:
+                await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
+                return
+
     #generate the quest message
     sidequest_message = await conversation.ai_get_response(
         sidequest_ai_prompt(task_type)
     )
-    
     #send the quest message to the player
     await state.ctx.followup.send(sidequest_message)
 
     #do the actual machinery of completing the sidequest
     await increment_player_x(state, 'sidequest', 1)
-    await increment_player_x(state, f"{task_type}_avail", -required_tasks)
-    await increment_player_x(state, 'debauchery_avail', -1)
+    await increment_player_x(state, f"{task_type}_avail", -non_deb_to_spend)
+    await increment_player_x(state, 'debauchery_avail', -debauchery_to_spend)
 
     # Sidequest XP bonus logic
     agility_level = await get_player_x(state, 'agility_level')

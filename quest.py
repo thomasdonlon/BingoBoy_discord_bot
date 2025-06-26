@@ -3,7 +3,7 @@
 import conversation
 import random
 from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt
-from utils import sanitize_text, replace_text_codes, get_player_x
+from utils import sanitize_text, replace_text_codes, get_player_x, inventory_contains
 
 #---------------------------------------
 # Helpers
@@ -91,7 +91,8 @@ class Quest:
     # Progression
     #---------------------------------------
 
-    def generate_new_tasks(self, state):
+    async def generate_new_tasks(self, state):
+        
         if self.difficulty == 'easy':
             self.current_step_num_tasks = random.randint(2,3)
             self.current_step_num_deb_tasks = random.randint(1,2)
@@ -101,12 +102,22 @@ class Quest:
         elif self.difficulty == 'hard':
             self.current_step_num_tasks = random.randint(3,5)
             self.current_step_num_deb_tasks = random.randint(2,5)
+
+        # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
+        if await inventory_contains(state, 'm5'):
+            self.current_step_num_deb_tasks *= 2
+            #await state.ctx.followup.send("Item bonus! Cursed Keg: Debauchery Task requirement doubled for this quest step.")
         
         self.current_step_type = random.choice(('exploration', 'combat', 'puzzle', 'dialogue'))
 
         if self.difficulty == 'drunken-dragon':
-            self.current_step_num_tasks = 3
-            self.current_step_num_deb_tasks = 3
+            # d2: Dragon-Slaying Lance - The Drunken Dragon quest steps only require [2] of each type of task
+            if await inventory_contains(state, 'd2'): 
+                self.current_step_num_tasks = 2
+                self.current_step_num_deb_tasks = 2
+            else:
+                self.current_step_num_tasks = 3
+                self.current_step_num_deb_tasks = 3
             self.current_step_type = 'drunken-dragon'
             
     async def start_quest(self, state): #have it split up this way so that the AI messages can be more tailored to the current quest state
