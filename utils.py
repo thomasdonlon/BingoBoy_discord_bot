@@ -1,3 +1,4 @@
+import random
 from text_storage import item_descriptions, skill_level_descriptions
 
 #---------------------------------
@@ -85,3 +86,30 @@ async def inventory_contains(state, item):
 	inventory_text = await get_player_x(state, 'inventory')
 	inventory_text = inventory_text.split(',')
 	return item in inventory_text
+
+#----------------------------------
+# Random functionality that includes the items that change percentages for skills and items
+#----------------------------------
+
+async def random_with_bonus(state):
+    """
+    Returns a random number between 0 and 1, plus any bonuses from the player's skills and items
+    """
+
+    bonus = 0.
+
+    # Tankard of Tenacity (d7): +0.02 per banked debauchery task
+    if await inventory_contains(state, 'd7'):
+        debauchery = await get_player_x(state, 'debauchery_avail')
+        bonus += debauchery * 0.02
+
+    # Sleight of Hand (Agility 15): +0.15 to all percentage-based effects
+    agility_level = await get_player_x(state, 'agility_level')
+    if agility_level >= 15:
+        bonus += 0.15
+
+    # Agility Master (Agility 35): Double the base percentage of all item and skills
+    if agility_level >= 35:
+        return (random.random() - bonus)/2 #equal to rand_num < 2*chance + bonus, i.e. doubling the base chance
+
+    return random.random() - bonus #subtracting the bonus makes the number more likely to hit
