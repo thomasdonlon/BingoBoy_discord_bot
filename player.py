@@ -47,14 +47,35 @@ async def init(state):
 
 async def increment_task(state, task_name, n=1, log_task=True):
     # Increment the task count for the specified task
+    # e7: Lucky Coin - 10% chance to provide 10 XP when you complete a non-Debauchery Task
+    if task_name[0] != 'b' and await inventory_contains(state, 'e7') and random.random() < 0.10:
+        await award_xp(state, 10)
+        await ctx_print(state, "Item bonus! Lucky Coin: You gained 10 XP!")
+
     if task_name[0] == 'e':
         await increment_player_x(state, 'exploration_avail', n)
+        # m1: Pathfinder Potion - Completing an Exploration task now awards 10 XP
+        if await inventory_contains(state, 'm1'):
+            await award_xp(state, 10)
+            await ctx_print(state, "Item bonus! Pathfinder Potion: You gained 10 XP for an Exploration task!")
     elif task_name[0] == 'c':
         await increment_player_x(state, 'combat_avail', n)
+        # m2: Mithril Sword - Completing a Combat task now awards 10 XP
+        if await inventory_contains(state, 'm2'):
+            await award_xp(state, 10)
+            await ctx_print(state, "Item bonus! Mithril Sword: You gained 10 XP for a Combat task!")
     elif task_name[0] == 'p':
         await increment_player_x(state, 'puzzle_avail', n)
+        # m3: Arcane Eye - Completing a Puzzle-Solving task now awards 10 XP
+        if await inventory_contains(state, 'm3'):
+            await award_xp(state, 10)
+            await ctx_print(state, "Item bonus! Arcane Eye: You gained 10 XP for a Puzzle-Solving task!")
     elif task_name[0] == 'd':
         await increment_player_x(state, 'dialogue_avail', n)
+        # m4: Golden Lip Balm - Completing a Dialogue task now awards 10 XP
+        if await inventory_contains(state, 'm4'):
+            await award_xp(state, 10)
+            await ctx_print(state, "Item bonus! Golden Lip Balm: You gained 10 XP for a Dialogue task!")
     elif task_name[0] == 'b':
         await increment_player_x(state, 'debauchery_avail', n)
         # Strength 1: Completing a Debauchery Task also provides +2 XP
@@ -106,7 +127,7 @@ async def log_task(state, task_name, rune_of_rep=False):
 
     # Normal task logging
     await increment_task(state, task_name)
-    
+
     # Apply extra task if triggered
     if extra_task and extra_task_type:
         await increment_task(state, extra_task_type[0], log_task=False)
@@ -135,6 +156,14 @@ async def get_last_logged_task(state):
 # Leveling
 #----------------------------------
 async def award_xp(state, xp_amount, double_allowed=True):
+    # d8: Bejeweled Scepter - All XP drops are increased by 1 x the number of items you have
+    if await inventory_contains(state, 'd8'):
+        inventory_text = await get_player_x(state, 'inventory')
+        num_items = len([item for item in inventory_text.split(',') if item])
+        if num_items > 0:
+            xp_amount += num_items
+            await ctx_print(state, f"Item bonus! Bejeweled Scepter: XP increased by {num_items} (total {xp_amount}).")
+
     wisdom_level = await get_player_x(state, 'wisdom_level')
     if double_allowed and wisdom_level >= 35: # Wisdom 35: Mastery: Doubles all XP gains
         xp_amount *= 2
@@ -250,12 +279,18 @@ async def progress_quest(state, skip_task_check=False):
     # read the quest from the database
     quest = await Quest.from_state(state)
 
+    # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
+    if not skip_task_check and await inventory_contains(state, 'm5'):
+        n_deb_tasks_needed = quest.current_step_num_deb_tasks * 2
+        await ctx_print(state, "Item bonus! Cursed Keg: Debauchery Task requirement doubled for this quest step.")
+    else:
+        n_deb_tasks_needed = quest.current_step_num_deb_tasks
+
     if not skip_task_check:
         # check that the player has enough banked tasks to progress the quest
         # and deduct the tasks from the player's available tasks
         task_type = quest.current_step_type
         n_tasks_needed = quest.current_step_num_tasks
-        n_deb_tasks_needed = quest.current_step_num_deb_tasks
 
         # check debauchery tasks first
         if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
@@ -318,6 +353,7 @@ async def progress_quest(state, skip_task_check=False):
         'medium': 200,
         'hard': 400
     }
+
     if complete_result: # the quest was completed
         # Increment the quest completion count
         await increment_player_x(state, f'{complete_result}_quest', 1)
@@ -330,9 +366,18 @@ async def progress_quest(state, skip_task_check=False):
             await increment_task(state, 'b', 2, log_task=False)
             await ctx_print(state, "Skill bonus! Take the Edge Off: You completed 2 debauchery tasks.")
         if complete_result in ('easy', 'medium', 'hard'):
+            base_xp = quest_xp[complete_result]
+            # e10: Buckler Shield - Quests are worth an additional 50 XP
+            if await inventory_contains(state, 'e10'):
+                base_xp += 50
+                await ctx_print(state, "Item bonus! Buckler Shield: Quest XP increased by 50.")
+            # m5: Cursed Keg - Quests give 50% more XP
+            if await inventory_contains(state, 'm5'):
+                base_xp = int(base_xp * 1.5)
+                await ctx_print(state, "Item bonus! Cursed Keg: Quest XP increased by 50%")
             await increment_player_x(state, f'{complete_result}_quest', 1)
             await increment_player_x(state, f'{complete_result}_quest_points', item_multiplier)
-            await award_xp(state, quest_xp[complete_result], double_allowed=False)
+            await award_xp(state, base_xp, double_allowed=False)
             if item_multiplier == 2:
                 await ctx_print(state, "Skill bonus! Strength Mastery: You received double quest item points.")
         return complete_result
@@ -414,6 +459,11 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         sq_xp_bonus += 10
         await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
 
+    # Talking Wizard Hat (d9): A sidequest of Puzzle-Solving Tasks is worth twice as much XP
+    if task_type == 'puzzle' and await inventory_contains(state, 'd9'):
+        sq_xp_bonus *= 2
+        await ctx_print(state, "Item bonus! Talking Wizard Hat: Your Puzzle-Solving sidequest is worth double XP!")
+
     # Award the main XP for completing the sidequest
     await award_xp(state, sq_xp_bonus, double_allowed=False)
 
@@ -449,6 +499,11 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         await increment_task(state, 'p', 1, log_task=False)
         await increment_task(state, 'd', 1, log_task=False)
         await ctx_print(state, "Item bonus! Game Genie Totem: You completed 1 of each non-Debauchery Task.")
+
+    # Potion of Progress (d4): 30% chance to produce an Easy Quest Item Point when completing a sidequest
+    if await inventory_contains(state, 'd4') and random.random() < 0.3:
+        await increment_player_x(state, 'easy_quest_points', 1)
+        await ctx_print(state, "Item bonus! Potion of Progress: You gained an Easy Quest Item Point.")
 
     await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
 
