@@ -6,6 +6,8 @@ from text_storage import xp_level_thresholds, skill_level_thresholds, sidequest_
 from utils import get_item_name, ctx_print, get_skill_description, get_player_x, set_player_x, increment_player_x, inventory_contains, random_with_bonus
 import random
 
+#TODO: ctx_print really could be a function within the State class since it always takes state as an argument
+
 #initialize the channel/player
 async def init(state):
     async with state.bot.pool.acquire() as con:   

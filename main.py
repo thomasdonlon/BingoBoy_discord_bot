@@ -8,7 +8,7 @@
 import os, logging, asyncpg
 import player
 from quest import format_quest_status, Quest
-from utils import get_item_name, inventory_contains, ctx_print
+from utils import get_item_name, inventory_contains, ctx_print, get_player_x
 from typing import Literal, Optional
 import hashlib
 
@@ -275,6 +275,12 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         if not difficulty:
             await ctx.response.send_message("Error: You must specify a difficulty for the quest. Use 'easy' ('e'), 'medium' ('m'), or 'hard' ('h').", ephemeral=True)
             return
+        
+        #ensure the player has no current quest
+        async with bot.pool.acquire() as con:
+            if get_player_x(state, 'current_quest'):
+                await ctx.response.send_message("Error: You already have a quest in progress. Please complete or abandon it before starting a new one.", ephemeral=True)
+                return
 
         #start the quest with the given difficulty
         #check that the difficulty is valid, and convert it to a full word if necessary
