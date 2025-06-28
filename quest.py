@@ -160,7 +160,7 @@ class Quest:
                 await state.ctx.followup.send("Strength 28: You skip the first two steps of the Drunken Dragon quest!")
 
         #set current number and type of tasks
-        self.generate_new_tasks(state)
+        await self.generate_new_tasks(state)
         await self.progress_quest_message(state)
         await self.write_quest_to_db(state)
 
@@ -175,7 +175,7 @@ class Quest:
         await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} of the quest '{replace_text_codes(self.name)}'!")
         
         #we run these either way
-        self.generate_new_tasks(state) #has to run before progress_quest_message
+        await self.generate_new_tasks(state) #has to run before progress_quest_message
         await self.progress_quest_message(state)
 
         if self.current_step_num == self.total_step_number: #quest is finished
