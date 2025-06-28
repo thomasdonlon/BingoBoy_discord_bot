@@ -172,7 +172,7 @@ async def award_xp(state, xp_amount, double_allowed=True):
         num_items = len([item for item in inventory_text.split(',') if item])
         if num_items > 0:
             xp_amount += num_items
-            await ctx_print(state, f"Item bonus! Bejeweled Scepter: XP increased by {num_items} (total {xp_amount}).")
+            bejeweled_scepter = True
 
     wisdom_level = await get_player_x(state, 'wisdom_level')
     if double_allowed and wisdom_level >= 35: # Wisdom 35: Mastery: Doubles all XP gains
@@ -185,7 +185,10 @@ async def award_xp(state, xp_amount, double_allowed=True):
             await level_up(state)
 
     #print an xp award message
-    await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
+    if bejeweled_scepter:
+        await ctx_print(state, f"Awarded {xp_amount} XP (including {num_items} bonus from Bejeweled Scepter). Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
+    else:
+        await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
 
 async def level_up(state):
     await increment_player_x(state, 'level', 1)
