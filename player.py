@@ -106,7 +106,7 @@ async def log_task(state, task_name, rune_of_rep=False):
     wisdom_level = await get_player_x(state, 'wisdom_level')
 
     # Runestone of Repetition (d3): 30% chance to complete each Task twice
-    if not rune_of_rep and await inventory_contains(state, 'd3') and await random_with_bonus(state) < 0.3: #avoid runestone activating off of a runestone proc
+    if not rune_of_rep and await inventory_contains(state, 'h3') and await random_with_bonus(state) < 0.3: #avoid runestone activating off of a runestone proc
         # Log the task twice
         await ctx_print(state, "Item bonus! Runestone of Repetition: You completed this task twice!")
         await log_task(state, task_name)
@@ -165,7 +165,7 @@ async def get_last_logged_task(state):
 #----------------------------------
 async def award_xp(state, xp_amount, double_allowed=True):
     # d8: Bejeweled Scepter - All XP drops are increased by 1 x the number of items you have
-    if await inventory_contains(state, 'd8'):
+    if await inventory_contains(state, 'h8'):
         inventory_text = await get_player_x(state, 'inventory')
         num_items = len([item for item in inventory_text.split(',') if item])
         if num_items > 0:
@@ -446,7 +446,7 @@ async def progress_quest(state, skip_task_check=False):
             complete_result = await quest.progress_quest(state)
             await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
     # Magic Rune (d5): 30% chance to complete an additional quest step when you complete a quest step
-    if not complete_result and await inventory_contains(state, 'd5') and await random_with_bonus(state) < 0.3:
+    if not complete_result and await inventory_contains(state, 'h5') and await random_with_bonus(state) < 0.3:
         complete_result = progress_quest(state, skip_task_check=True) # skip the task check since this is a bonus step
         await ctx_print(state, "Item bonus! Magic Rune: You completed an additional quest step.")
     return
@@ -474,7 +474,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         debauchery_available = await get_player_x(state, 'debauchery_avail')
         non_deb_to_spend = min(non_deb_tasks_available, required_tasks)
         debauchery_to_spend = 1
-        if await inventory_contains(state, 'd1'):
+        if await inventory_contains(state, 'h1'):
             # Use debauchery tasks to cover any missing non-debauchery tasks
             missing = required_tasks - non_deb_tasks_available
             if missing > 0:
@@ -517,7 +517,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         await set_player_x(state, 'sq_xp_bonus', sq_xp_bonus)
 
     # Talking Wizard Hat (d9): A sidequest of Puzzle-Solving Tasks is worth twice as much XP
-    if task_type == 'puzzle' and await inventory_contains(state, 'd9'):
+    if task_type == 'puzzle' and await inventory_contains(state, 'h9'):
         sq_xp_bonus *= 2
         await ctx_print(state, "Item bonus! Talking Wizard Hat: Your Puzzle-Solving sidequest is worth double XP!")
 
@@ -558,7 +558,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         await ctx_print(state, "Item bonus! Game Genie Totem: You completed 1 of each non-Debauchery Task.")
 
     # Potion of Progress (d4): 30% chance to produce an Easy Quest Item Point when completing a sidequest
-    if await inventory_contains(state, 'd4') and await random_with_bonus(state) < 0.3:
+    if await inventory_contains(state, 'h4') and await random_with_bonus(state) < 0.3:
         await increment_player_x(state, 'easy_quest_points', 1)
         await ctx_print(state, "Item bonus! Potion of Progress: You gained an Easy Quest Item Point.")
 

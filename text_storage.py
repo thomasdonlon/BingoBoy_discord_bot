@@ -111,16 +111,16 @@ item_descriptions = {
     'm8': r"Scroll of Misty Step: Start each quest on the 2nd step. (Except the Drunken Dragon quest)",
     'm9': r"Robe of Stars: Gain 1 additional skill point when you level up.",
     'm10': r"Lucky Rabbit's Foot: You have a 15% chance to automatically skip each quest step.",
-    'd1': r"Map of Many Sips: Debauchery Tasks will be used to cover any missing non-Debauchery Tasks when completing sidequests.",
-    'd2': r"Dragon-Slaying Lance: The Drunken Dragon quest steps only require [2] of each type of task.",
-    'd3': r"Runestone of Repetition: 30% chance to complete each Task twice.",
-    'd4': r"Potion of Progress: Completing a sidequest has a 30% chance of producing an Easy Quest Item Point.",
-    'd5': r"Magic Rune: 30% chance to complete an additional quest step when you complete a quest step.",
-    'd6': r"Scrying Orb: Quest steps always require the smallest number of tasks possible.",
-    'd7': r"Tankard of Tenacity: All skill and item percentages are increased by 2% (up to 100%) for each banked Debauchery Task.",
-    'd8': r"Bejeweled Scepter: All XP drops are increased by 1 x the number of items you have.",
-    'd9': r"Talking Wizard Hat: A sidequest of Puzzle-Solving Tasks is worth twice as much XP.",
-    'd10': r"Mead of Madness: Non-debauchery tasks can now be completed as many times as you like."
+    'h1': r"Map of Many Sips: Debauchery Tasks will be used to cover any missing non-Debauchery Tasks when completing sidequests.",
+    'h2': r"Dragon-Slaying Lance: The Drunken Dragon quest steps only require [2] of each type of task.",
+    'h3': r"Runestone of Repetition: 30% chance to complete each Task twice.",
+    'h4': r"Potion of Progress: Completing a sidequest has a 30% chance of producing an Easy Quest Item Point.",
+    'h5': r"Magic Rune: 30% chance to complete an additional quest step when you complete a quest step.",
+    'h6': r"Scrying Orb: Quest steps always require the smallest number of tasks possible.",
+    'h7': r"Tankard of Tenacity: All skill and item percentages are increased by 2% (up to 100%) for each banked Debauchery Task.",
+    'h8': r"Bejeweled Scepter: All XP drops are increased by 1 x the number of items you have.",
+    'h9': r"Talking Wizard Hat: A sidequest of Puzzle-Solving Tasks is worth twice as much XP.",
+    'h10': r"Mead of Madness: Non-debauchery tasks can now be completed as many times as you like."
 }
 
 base_ai_prompt = "You are providing a text-based RPG adventure game experience. " \

@@ -103,7 +103,7 @@ async def random_with_bonus(state):
     mult = 2 if agility_level > 35 else 1 #a couple edge cases for Agility Master
 
     # Tankard of Tenacity (d7): +0.02 per banked debauchery task
-    if await inventory_contains(state, 'd7'):
+    if await inventory_contains(state, 'h7'):
         debauchery = await get_player_x(state, 'debauchery_avail')
         bonus += debauchery * 0.02 * mult
 

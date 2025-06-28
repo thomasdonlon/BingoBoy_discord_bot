@@ -94,7 +94,7 @@ class Quest:
     async def generate_new_tasks(self, state):
 
         # d6: Scrying Orb - Quest steps always require the smallest number of tasks possible
-        if await inventory_contains(state, 'd6'):
+        if await inventory_contains(state, 'h6'):
             if self.difficulty == 'easy':
                 self.current_step_num_tasks = 2
                 self.current_step_num_deb_tasks = 1
@@ -126,7 +126,7 @@ class Quest:
 
         if self.difficulty == 'drunken-dragon':
             # d2: Dragon-Slaying Lance - The Drunken Dragon quest steps only require [2] of each type of task
-            if await inventory_contains(state, 'd2'): 
+            if await inventory_contains(state, 'h2'): 
                 self.current_step_num_tasks = 2
                 self.current_step_num_deb_tasks = 2
             else:
