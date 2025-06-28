@@ -47,7 +47,7 @@ async def init(state):
 # Tasks
 #----------------------------------
 
-async def increment_task(state, task_name, n=1, log_task=True):
+async def increment_task(state, task_name, n=1, log_task=True, from_strength_potion=False):
     # Increment the task count for the specified task
     
     #things that proc for non-debauchery tasks
@@ -57,8 +57,8 @@ async def increment_task(state, task_name, n=1, log_task=True):
             await award_xp(state, 10)
             await ctx_print(state, "Item bonus! Lucky Coin: You gained 10 XP!")
         # e5: Strength Potion - 10% chance to complete a Combat Task whenever you complete a non-Debauchery Task
-        if await inventory_contains(state, 'e5') and await random_with_bonus(state) < 0.10:
-            await increment_task(state, 'c', 1, log_task=False)
+        if not from_strength_potion and await inventory_contains(state, 'e5') and await random_with_bonus(state) < 0.10:
+            await increment_task(state, 'c', 1, log_task=False, from_strength_potion=True)
             await ctx_print(state, "Item bonus! Strength Potion: You completed a bonus Combat Task!")
 
     if task_name[0] == 'e':
