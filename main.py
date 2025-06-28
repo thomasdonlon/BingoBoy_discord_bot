@@ -10,6 +10,7 @@ import player
 from quest import format_quest_status, Quest
 from utils import get_item_name, inventory_contains
 from typing import Literal, Optional
+import hashlib
 
 import discord
 from discord.ext import commands, tasks
@@ -33,7 +34,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='$', intents=intents)
 tree = bot.tree
 
-pass_hash = -5589850025588590312 #hash used to password protect the bot commands we really don't want other people running
+pass_hash = '714bbceba09595a65bf4c9c15e4a9d35302009cc6de1c684c636876ef0d8d863' #hash used to password protect the bot commands we really don't want other people running
 
 #--------------------------------------
 # HELPERS/CONVENIENCE
@@ -215,7 +216,7 @@ async def init_channel(ctx : discord.Interaction) -> None:
 @tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
 async def override(ctx : discord.Interaction, password : str, player : str, parameter_name : str, value : str) -> None:
-    if hash(password) != pass_hash:
+    if hashlib.sha256(bytes(password)).hexdigest() != pass_hash:
         await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
         return
     async with bot.pool.acquire() as con:
@@ -247,7 +248,7 @@ async def stop_status_display(ctx : discord.Interaction) -> None:
 @run_with_error_handling
 @tree.command(name="reset_game", description="Resets the game data (Admin Only).")
 async def reset_game(ctx : discord.Interaction, password : str) -> None:
-    if hash(password) != pass_hash:
+    if hashlib.sha256(bytes(password)).hexdigest() != pass_hash:
         await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
         return
     async with bot.pool.acquire() as con:
