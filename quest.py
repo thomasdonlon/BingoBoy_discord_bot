@@ -167,12 +167,12 @@ class Quest:
     async def progress_quest(self, state): #progress the quest, incrementing the step number and generating new tasks if needed
                                            #xp and rewards will be handled in the main.py part of things
         if self.current_step_num >= self.total_step_number:
-            await state.ctx.followup.send("Error: Cannot progress quest, already completed.")
+            await ctx_print(state, "Error: Cannot progress quest, already completed.")
             print("Error: Cannot progress quest, already at maximum step number.")
             return
         
         self.current_step_num += 1
-        await state.ctx.followup.send(f"You have completed step {self.current_step_num} of {self.total_step_number} of the quest '{replace_text_codes(self.name)}'!")
+        await ctx_print(state, f"You have completed step {self.current_step_num} of {self.total_step_number} of the quest '{replace_text_codes(self.name)}'!")
         
         #we run these either way
         await self.generate_new_tasks(state) #has to run before progress_quest_message
@@ -182,9 +182,9 @@ class Quest:
             tmp_difficulty = self.difficulty  # Store the current difficulty before resetting
             await self.reset_quest_in_db(state)
             if self.difficulty == 'drunken-dragon':
-                await state.ctx.followup.send("You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
+                await ctx_print(state, "You have defeated the Drunken Dragon! You win the Gauntlet of Grog, and have saved the Kingdom of Brewgard!")
             else:
-                await state.ctx.followup.send(f"You have completed the quest '{replace_text_codes(self.name)}'! You may start a new quest at any time.")
+                await ctx_print(state, f"You have completed the quest '{replace_text_codes(self.name)}'! You may start a new quest at any time.")
             return tmp_difficulty
         else: #quest is not finished yet
             await self.write_quest_to_db(state)
@@ -192,7 +192,7 @@ class Quest:
 
     async def abandon_quest(self, state): #abandon the quest, resetting it in the database
         await self.reset_quest_in_db(state)
-        await state.ctx.response.send_message("You have abandoned the quest. You may start a new one at any time.")
+        await ctx_print(state, "You have abandoned the quest. You may start a new one at any time.")
 
     #---------------------------------------
     # Wrapper for ChatGPT Interaction 
@@ -208,9 +208,16 @@ class Quest:
             quest_message = await conversation.ai_get_response(
                 drunken_dragon_ai_prompt(self.current_step_num, self.total_step_number, self.text_log)
             )
+            
+            # Ensure we have a valid message before sending
+            if not quest_message or not quest_message.strip():
+                quest_message = f"You continue your battle with the Drunken Dragon! (AI response unavailable)"
         else:
             if self.current_step_num == 0:  # Only get a name for the quest at the start
-                self.name = sanitize_text(await conversation.ai_get_response(quest_name_prompt)) #chatgpt loves to toss in problematic characters, so we remove them here
+                quest_name = await conversation.ai_get_response(quest_name_prompt)
+                if not quest_name or not quest_name.strip():
+                    quest_name = f"A {self.difficulty.title()} Quest"
+                self.name = sanitize_text(quest_name) #chatgpt loves to toss in problematic characters, so we remove them here
 
             #generate the quest message
             quest_message = await conversation.ai_get_response(
@@ -236,7 +243,7 @@ class Quest:
             else:
                 out_text += f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).'
 
-        await state.ctx.followup.send(out_text)
+        await ctx_print(state, out_text)
 
         #add the quest message to the text log for context
         self.text_log.append(quest_message)
