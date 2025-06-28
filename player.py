@@ -51,11 +51,11 @@ async def increment_task(state, task_name, n=1, log_task=True):
     #things that proc for non-debauchery tasks
     if task_name[0] != 'b':
         # e7: Lucky Coin - 10% chance to provide 10 XP when you complete a non-Debauchery Task
-        if await inventory_contains(state, 'e7') and random_with_bonus(state) < 0.10:
+        if await inventory_contains(state, 'e7') and await random_with_bonus(state) < 0.10:
             await award_xp(state, 10)
             await ctx_print(state, "Item bonus! Lucky Coin: You gained 10 XP!")
         # e5: Strength Potion - 10% chance to complete a Combat Task whenever you complete a non-Debauchery Task
-        if await inventory_contains(state, 'e5') and random_with_bonus(state) < 0.10:
+        if await inventory_contains(state, 'e5') and await random_with_bonus(state) < 0.10:
             await increment_task(state, 'c', 1, log_task=False)
             await ctx_print(state, "Item bonus! Strength Potion: You completed a bonus Combat Task!")
 
@@ -106,7 +106,7 @@ async def log_task(state, task_name, rune_of_rep=False):
     wisdom_level = await get_player_x(state, 'wisdom_level')
 
     # Runestone of Repetition (d3): 30% chance to complete each Task twice
-    if not rune_of_rep and await inventory_contains(state, 'd3') and random_with_bonus(state) < 0.3: #avoid runestone activating off of a runestone proc
+    if not rune_of_rep and await inventory_contains(state, 'd3') and await random_with_bonus(state) < 0.3: #avoid runestone activating off of a runestone proc
         # Log the task twice
         await ctx_print(state, "Item bonus! Runestone of Repetition: You completed this task twice!")
         await log_task(state, task_name)
@@ -114,22 +114,22 @@ async def log_task(state, task_name, rune_of_rep=False):
 
     # Strength 3: 25% chance for extra combat task
     if task_name[0] == 'c' and strength_level >= 3:
-        if random_with_bonus(state) < 0.25:
+        if await random_with_bonus(state) < 0.25:
             extra_task = True
             extra_task_type = 'combat_avail'
     # Agility 3: 25% chance for extra exploration task
     elif task_name[0] == 'e' and agility_level >= 3:
-        if random_with_bonus(state) < 0.25:
+        if await random_with_bonus(state) < 0.25:
             extra_task = True
             extra_task_type = 'exploration_avail'
     # Wisdom 1: 25% chance for extra dialogue task
     elif task_name[0] == 'd' and wisdom_level >= 1:
-        if random_with_bonus(state) < 0.25:
+        if await random_with_bonus(state) < 0.25:
             extra_task = True
             extra_task_type = 'dialogue_avail'
     # Wisdom 3: 25% chance for extra puzzle task
     elif task_name[0] == 'p' and wisdom_level >= 3:
-        if random_with_bonus(state) < 0.25:
+        if await random_with_bonus(state) < 0.25:
             extra_task = True
             extra_task_type = 'puzzle_avail'
 
@@ -373,7 +373,7 @@ async def progress_quest(state, skip_task_check=False):
     # Strength 5: Each completed quest step has a 30% chance to award 10 XP
     strength_level = await get_player_x(state, 'strength_level')
     wisdom_level = await get_player_x(state, 'wisdom_level')
-    if strength_level >= 5 and random_with_bonus(state) < 0.3:
+    if strength_level >= 5 and await random_with_bonus(state) < 0.3:
         await award_xp(state, 10)
         await ctx_print(state, "Skill bonus! Booze Boost: You gained 10 bonus XP for completing a quest step.")
     # Wisdom 20: Gain 10 bonus XP whenever you complete a quest step
@@ -381,7 +381,7 @@ async def progress_quest(state, skip_task_check=False):
         await award_xp(state, 10)
         await ctx_print(state, "Skill bonus! Oracle: You gained 10 bonus XP for completing a quest step.")
     # Wisdom 15: 20% chance to also complete the next quest step
-    if complete_result is None and wisdom_level >= 15 and random_with_bonus(state) < 0.20:
+    if complete_result is None and wisdom_level >= 15 and await random_with_bonus(state) < 0.20:
         # Only attempt to progress if quest is not already completed
         current_quest = await get_player_x(state, 'current_quest')
         if current_quest:
@@ -426,27 +426,27 @@ async def progress_quest(state, skip_task_check=False):
     else:
         # if the quest was not completed, check for item abilities to skip steps
         # Elven Compass (e1) - 25% chance to skip an exploration quest step
-        if await inventory_contains(state, 'e1') and random_with_bonus(state) < 0.25 and task_type == 'exploration':
+        if await inventory_contains(state, 'e1') and await random_with_bonus(state) < 0.25 and task_type == 'exploration':
             await ctx_print(state, "Item bonus! Elven Compass: You skipped an exploration quest step.")
             complete_result = await quest.progress_quest(state)
         # Invisibility Cloak (e2) - 25% chance to skip a combat quest step
-        elif await inventory_contains(state, 'e2') and random_with_bonus(state) < 0.25 and task_type == 'combat':
+        elif await inventory_contains(state, 'e2') and await random_with_bonus(state) < 0.25 and task_type == 'combat':
             await ctx_print(state, "Item bonus! Invisibility Cloak: You skipped a combat quest step.")
             complete_result = await quest.progress_quest(state)
         # Lockpick Set (e3) - 25% chance to skip a puzzle quest step
-        elif await inventory_contains(state, 'e3') and random_with_bonus(state) < 0.25 and task_type == 'puzzle':
+        elif await inventory_contains(state, 'e3') and await random_with_bonus(state) < 0.25 and task_type == 'puzzle':
             await ctx_print(state, "Item bonus! Lockpick Set: You skipped a puzzle-solving quest step.")
             complete_result = await quest.progress_quest(state)
         # Silver Tongue (e4) - 25% chance to skip a dialogue quest step
-        elif await inventory_contains(state, 'e4') and random_with_bonus(state) < 0.25 and task_type == 'dialogue':
+        elif await inventory_contains(state, 'e4') and await random_with_bonus(state) < 0.25 and task_type == 'dialogue':
             await ctx_print(state, "Item bonus! Silver Tongue: You skipped a dialogue quest step.")
             complete_result = await quest.progress_quest(state)
         # Lucky Rabbit's Foot (m10) - 15% chance to skip any quest step
-        if not complete_result and await inventory_contains(state, 'm10') and random_with_bonus(state) < 0.15:
+        if not complete_result and await inventory_contains(state, 'm10') and await random_with_bonus(state) < 0.15:
             complete_result = await quest.progress_quest(state)
             await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
     # Magic Rune (d5): 30% chance to complete an additional quest step when you complete a quest step
-    if not complete_result and await inventory_contains(state, 'd5') and random_with_bonus(state) < 0.3:
+    if not complete_result and await inventory_contains(state, 'd5') and await random_with_bonus(state) < 0.3:
         complete_result = progress_quest(state, skip_task_check=True) # skip the task check since this is a bonus step
         await ctx_print(state, "Item bonus! Magic Rune: You completed an additional quest step.")
     return
@@ -532,11 +532,11 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
     # --- Skill Effects: Agility 1, 20, 28 ---
     agility_level = await get_player_x(state, 'agility_level')
     # Agility 1: 10% chance for Easy Quest Item Point
-    if agility_level >= 1 and random_with_bonus(state) < 0.10:
+    if agility_level >= 1 and await random_with_bonus(state) < 0.10:
         await increment_player_x(state, 'easy_quest_points', 1)
         await ctx_print(state, "Skill bonus! You gained an Easy Quest Item Point.")
     # Agility 20: 20% chance to also complete the current quest step
-    if agility_level >= 20 and random_with_bonus(state) < 0.20:
+    if agility_level >= 20 and await random_with_bonus(state) < 0.20:
         # Progress the current quest if one exists
         current_quest = await get_player_x(state, 'current_quest')
         if current_quest:
@@ -544,7 +544,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
             await quest.progress_quest(state)
             await ctx_print(state, "Skill bonus! You also progressed your current quest step.")
     # Agility 28: 20% chance for random item point
-    if agility_level >= 28 and random_with_bonus(state) < 0.20:
+    if agility_level >= 28 and await random_with_bonus(state) < 0.20:
         rarity = random.choice(['easy_quest_points', 'medium_quest_points', 'hard_quest_points'])
         await increment_player_x(state, rarity, 1)
         await ctx_print(state, f"Skill bonus! You gained a {rarity.replace('_', ' ').title()}.")
@@ -558,7 +558,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         await ctx_print(state, "Item bonus! Game Genie Totem: You completed 1 of each non-Debauchery Task.")
 
     # Potion of Progress (d4): 30% chance to produce an Easy Quest Item Point when completing a sidequest
-    if await inventory_contains(state, 'd4') and random_with_bonus(state) < 0.3:
+    if await inventory_contains(state, 'd4') and await random_with_bonus(state) < 0.3:
         await increment_player_x(state, 'easy_quest_points', 1)
         await ctx_print(state, "Item bonus! Potion of Progress: You gained an Easy Quest Item Point.")
 
