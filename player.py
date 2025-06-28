@@ -151,13 +151,13 @@ async def remove_task(state, task_name):
     async with state.bot.pool.acquire() as con:
         await con.execute(f"UPDATE data SET last_logged_task = '' WHERE name = '{state.player}'")
     
-    await state.ctx.response.send_message(f"Removed task: {task_name}")
+    await ctx_print(state, f"Removed task: {task_name}")
 
 async def get_last_logged_task(state):
     #check if the player has a last logged task
     last_logged_task = await get_player_x(state, 'last_logged_task')
     if not last_logged_task:
-        await state.ctx.response.send_message("Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.", ephemeral=True)
+        await ctx_print(state, "Error: No task to undo. If you are trying to undo more than one task, use `\\task undo <task_name>` for each task.", ephemeral=True)
         return
 
     return last_logged_task 
@@ -278,7 +278,7 @@ async def start_quest(state, difficulty):
     if difficulty == 'drunken-dragon':
         current_level = await get_player_x(state, 'level')
         if current_level < 10:
-            await state.ctx.response.send_message("Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
+            await ctx_print(state, "Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
             return
 
     #initialize the quest object (starts the quest and writes it to the database)
@@ -294,7 +294,7 @@ async def progress_quest(state, skip_task_check=False):
     # check if the player has a quest
     current_quest = await get_player_x(state, 'current_quest')
     if not current_quest:
-        await state.ctx.followup.send("Error: You do not have an active quest.")
+        await ctx_print(state, "Error: You do not have an active quest.")
         return
 
     # read the quest from the database
@@ -309,7 +309,7 @@ async def progress_quest(state, skip_task_check=False):
 
         # check debauchery tasks first
         if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
-            await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
+            await ctx_print(state, "Error: Not enough debauchery tasks available to progress quest.")
             return
 
         strength_level = await get_player_x(state, 'strength_level')
@@ -323,7 +323,7 @@ async def progress_quest(state, skip_task_check=False):
                 total_missing = sum(max(0, m) for m in missing.values())
                 debauchery_needed = n_deb_tasks_needed + total_missing
                 if await get_player_x(state, 'debauchery_avail') < debauchery_needed:
-                    await state.ctx.followup.send(f"Error: Not enough debauchery tasks available to cover missing tasks for Drunken Dragon quest (need {debauchery_needed}).")
+                    await ctx_print(state, f"Error: Not enough debauchery tasks available to cover missing tasks for Drunken Dragon quest (need {debauchery_needed}).")
                     return
                 # Deduct all available non-debauchery tasks, and cover the rest with debauchery
                 for t in types:
@@ -338,7 +338,7 @@ async def progress_quest(state, skip_task_check=False):
                 debauchery_needed = n_deb_tasks_needed
                 if missing > 0:
                     if await get_player_x(state, 'debauchery_avail') < (n_deb_tasks_needed + missing):
-                        await state.ctx.followup.send(f"Error: Not enough debauchery tasks available to cover missing {task_type} tasks (need {n_deb_tasks_needed + missing}).")
+                        await ctx_print(state, f"Error: Not enough debauchery tasks available to cover missing {task_type} tasks (need {n_deb_tasks_needed + missing}).")
                         return
                     # Deduct all available non-debauchery tasks, and cover the rest with debauchery
                     await increment_player_x(state, f'{task_type}_avail', -available)
@@ -354,7 +354,7 @@ async def progress_quest(state, skip_task_check=False):
                 or await get_player_x(state, 'puzzle_avail') < n_tasks_needed
                 or await get_player_x(state, 'dialogue_avail') < n_tasks_needed
             ):
-                await state.ctx.followup.send(
+                await ctx_print(state, 
                     f"Error: Not enough tasks available to progress quest. Need {n_tasks_needed} of each type, have {await get_player_x(state, 'exploration_avail')}, {await get_player_x(state, 'combat_avail')}, {await get_player_x(state, 'puzzle_avail')}, {await get_player_x(state, 'dialogue_avail')}."
                 )
                 return
@@ -464,7 +464,7 @@ async def abandon_quest(state):
     #check if the player has a quest
     current_quest = await get_player_x(state, 'current_quest')
     if not current_quest:
-        await state.ctx.response.send_message("Error: You do not have an active quest.")
+        await ctx_print(state, "Error: You do not have an active quest.")
         return
 
     #abandon the quest
@@ -475,6 +475,10 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
     # Agility 10: Sidequests require only 2 non-Debauchery Tasks
     agility_level = await get_player_x(state, 'agility_level')
     required_tasks = 2 if agility_level >= 10 else 3
+
+    # Initialize variables that might be used later
+    non_deb_to_spend = 0
+    debauchery_to_spend = 0
 
     if not skip_task_check:
     

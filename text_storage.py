@@ -168,7 +168,7 @@ def sidequest_ai_prompt(type):
     f"You are currently generating a short sidequest for the player to complete. " \
     f"A sidequest consist of a single task that the player have completed in order to progress. They are self-contained and do not leave cliffhangers. " \
     f"The content of your response should be roughly 3 sentences long. " \
-    f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed, and a reason why the grog-drying spell is not fixed. " \
+    f"It should begin with the name of the sidequest, followed by a description of the task that the player has completed. Remember that the grog-drying spell is not fixed. " \
     f"This sidequest is focused on {type}. " \
     
     return prompt
