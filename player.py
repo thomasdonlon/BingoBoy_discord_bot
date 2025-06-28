@@ -240,12 +240,12 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
     #make sure that the player is not trying to increment their skill level above 35
     old_skill_level = await get_player_x(state, f"{skill_name}_level")
     if old_skill_level == 35:
-        ctx_print(state, f"{skill_name} is already at max level!")
+        await ctx_print(state, f"{skill_name} is already at max level!")
         return
 
     elif old_skill_level + number > 35:
         number = 35 - old_skill_level
-        ctx_print(state, f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
+        await ctx_print(state, f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
 
     #increment the skill level with a little message
     output_dict = {
