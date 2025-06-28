@@ -397,9 +397,7 @@ async def progress_quest(state, skip_task_check=False):
     }
 
     if complete_result: # the quest was completed
-        # Increment the quest completion count
-        await increment_player_x(state, f'{complete_result}_quest', 1)
-
+        
         # Strength 35: Double the number of items you get from quest rewards
         strength_level = await get_player_x(state, 'strength_level')
         item_multiplier = 2 if strength_level >= 35 else 1
@@ -417,9 +415,12 @@ async def progress_quest(state, skip_task_check=False):
             if await inventory_contains(state, 'm5'):
                 base_xp = int(base_xp * 1.5)
                 await ctx_print(state, "Item bonus! Cursed Keg: Quest XP increased by 50%")
+
+            # Increment the quest completion count, item points, and xp
             await increment_player_x(state, f'{complete_result}_quest', 1)
             await increment_player_x(state, f'{complete_result}_quest_points', item_multiplier)
             await award_xp(state, base_xp, double_allowed=False)
+
             if item_multiplier == 2:
                 await ctx_print(state, "Skill bonus! Strength Mastery: You received double quest item points.")
         return complete_result
