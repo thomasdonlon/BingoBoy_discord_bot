@@ -365,10 +365,10 @@ async def progress_quest(state, skip_task_check=False):
                 await increment_player_x(state, 'debauchery_avail', -n_deb_tasks_needed)
         else:  # cover the regular task types
             if await get_player_x(state, f'{task_type}_avail') < n_tasks_needed:
-                await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to progress quest.")
+                await ctx_print(state, f"Error: Not enough {task_type} tasks available to progress quest.")
                 return
             if await get_player_x(state, 'debauchery_avail') < n_deb_tasks_needed:
-                await state.ctx.followup.send("Error: Not enough debauchery tasks available to progress quest.")
+                await ctx_print(state, "Error: Not enough debauchery tasks available to progress quest.")
                 return
             else:
                 await increment_player_x(state, f'{task_type}_avail', -n_tasks_needed)

@@ -99,7 +99,7 @@ def is_valid_task_name(task_name):
     # A task name should be a single letter ('e', 'c', 'p', 'd', or 'b') plus an arbitrary number of numeric characters
     return bool(task_name) and task_name[0].isalpha() and task_name[1:].isdigit() and task_name[0] in ('e', 'c', 'p', 'd', 'b')
 
-async def end_game(winning_player):
+async def end_game(state, winning_player):
     #stop the status display if it's running
     global display_running
     if display_running:
@@ -110,7 +110,7 @@ async def end_game(winning_player):
         print(f"Status display is not running.")
 
     #print a message to the summary channel
-    channel = bot.get_channel(summary_channel_id)  # Replace with your channel ID
+    channel = state.bot.get_channel(summary_channel_id)  # Replace with your channel ID
     if channel:
         await channel.send(f"{winning_player} has defeated the Drunken Dragon! Thanks for playing!")
         await channel.send(f"The game will continue to run if you wish to keep playing for fun. However, the game has officially ended.")
@@ -305,7 +305,7 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         await state.ctx.response.defer() #this takes a while to interact with chatgpt
         complete_result = await player.progress_quest(state) #is only not None if the quest is completed
         if complete_result == 'drunken-dragon':
-            end_game(ctx.channel)
+            await end_game(state, ctx.channel)
 
     elif action == 'abandon' or action == 'a':
         #abandon the quest

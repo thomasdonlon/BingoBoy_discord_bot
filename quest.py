@@ -3,7 +3,7 @@
 import conversation
 import random
 from text_storage import quest_name_prompt, quest_ai_prompt, drunken_dragon_ai_prompt
-from utils import sanitize_text, replace_text_codes, get_player_x, inventory_contains
+from utils import sanitize_text, replace_text_codes, get_player_x, inventory_contains, ctx_print
 
 #---------------------------------------
 # Helpers
@@ -157,7 +157,7 @@ class Quest:
             self.total_step_number = 5
             if strength_level >= 28:
                 self.current_step_num = 2
-                await state.ctx.followup.send("Strength 28: You skip the first two steps of the Drunken Dragon quest!")
+                await ctx_print(state, "Strength 28: You skip the first two steps of the Drunken Dragon quest!")
 
         #set current number and type of tasks
         await self.generate_new_tasks(state)
