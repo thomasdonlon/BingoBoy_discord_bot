@@ -446,8 +446,8 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
                 await con.execute(f'ALTER TABLE tasks ADD COLUMN IF NOT EXISTS {task_name} INTEGER DEFAULT 0')
 
             #check that the player hasn't logged this task 5 times already
-            # and that they don't have the mead of madness item (m9)
-            if task_name[0] != 'b' and not await inventory_contains(state, 'm9'): #debauchery tasks can be completed as many times as you want, and mead of madness allows you to complete non-debauchery tasks without limit
+            # and that they don't have the mead of madness item (h10)
+            if task_name[0] != 'b' and not await inventory_contains(state, 'h10'): #debauchery tasks can be completed as many times as you want, and mead of madness allows you to complete non-debauchery tasks without limit
                 query_result = await con.fetch(f'SELECT {task_name} FROM tasks WHERE name = $1', state.player) 
                 num_completions = query_result[0][task_name] #get the value we care about out of the query
                 if num_completions >= 5:
