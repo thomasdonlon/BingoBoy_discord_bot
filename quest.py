@@ -12,6 +12,11 @@ from utils import sanitize_text, replace_text_codes, get_player_x, inventory_con
 def format_quest_status(quest):
     #format the quest status for display
     #this is used in the quest status command to show the current quest status to the player
+    if quest.current_step_num == 0: #don't want the player to know how many steps are left at the start of the quest
+        return f"{replace_text_codes(quest.name)}:\nDifficulty: {quest.difficulty}\n" \
+               f"First Step\n" \
+               f"Need {quest.current_step_num_tasks} {quest.current_step_type} tasks " \
+               f"and {quest.current_step_num_deb_tasks} Debauchery task(s)."
     return f"{replace_text_codes(quest.name)}:\nDifficulty: {quest.difficulty}\n" \
            f"Step {quest.current_step_num + 1}/{quest.total_step_number}\n" \
            f"Need {quest.current_step_num_tasks} {quest.current_step_type} tasks " \
@@ -96,13 +101,13 @@ class Quest:
         # d6: Scrying Orb - Quest steps always require the smallest number of tasks possible
         if await inventory_contains(state, 'h6'):
             if self.difficulty == 'easy':
-                self.current_step_num_tasks = 2
+                self.current_step_num_tasks = 1
                 self.current_step_num_deb_tasks = 1
             elif self.difficulty == 'medium':
                 self.current_step_num_tasks = 2
-                self.current_step_num_deb_tasks = 2
+                self.current_step_num_deb_tasks = 1
             elif self.difficulty == 'hard':
-                self.current_step_num_tasks = 3
+                self.current_step_num_tasks = 2
                 self.current_step_num_deb_tasks = 2
 
         else:
@@ -111,22 +116,22 @@ class Quest:
                 self.current_step_num_tasks = random.randint(2,3)
                 self.current_step_num_deb_tasks = random.randint(1,2)
             elif self.difficulty == 'medium':
-                self.current_step_num_tasks = random.randint(2,4)
-                self.current_step_num_deb_tasks = random.randint(2,3)
+                self.current_step_num_tasks = random.randint(2,3)
+                self.current_step_num_deb_tasks = random.randint(1,3)
             elif self.difficulty == 'hard':
-                self.current_step_num_tasks = random.randint(3,5)
-                self.current_step_num_deb_tasks = random.randint(2,5)
+                self.current_step_num_tasks = random.randint(2,4)
+                self.current_step_num_deb_tasks = random.randint(2,4)
         
         self.current_step_type = random.choice(('exploration', 'combat', 'puzzle', 'dialogue'))
 
         if self.difficulty == 'drunken-dragon':
-            # d2: Dragon-Slaying Lance - The Drunken Dragon quest steps only require [2] of each type of task
+            # d2: Dragon-Slaying Lance - The Drunken Dragon quest steps only require [1] of each type of task
             if await inventory_contains(state, 'h2'): 
+                self.current_step_num_tasks = 1
+                self.current_step_num_deb_tasks = 1
+            else:
                 self.current_step_num_tasks = 2
                 self.current_step_num_deb_tasks = 2
-            else:
-                self.current_step_num_tasks = 3
-                self.current_step_num_deb_tasks = 3
             self.current_step_type = 'drunken-dragon'
 
         # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
@@ -145,9 +150,9 @@ class Quest:
                 self.total_step_number = random.randint(2,3)
         elif self.difficulty == 'medium':
             if strength_level >= 10:
-                self.total_step_number = 3  # never max (3-4), so always 3
+                self.total_step_number = random.randint(2,3)  # never max (3-4), so always 3
             else:
-                self.total_step_number = random.randint(3,4)
+                self.total_step_number = random.randint(2,4)
         elif self.difficulty == 'hard':
             if strength_level >= 10:
                 self.total_step_number = random.randint(3,4)  # never max (3-5), so always 3 or 4
@@ -235,7 +240,10 @@ class Quest:
         if self.current_step_num == self.total_step_number:
             out_text += f': Quest completed!\n\n'
         else:
-            out_text += f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n'
+            if self.current_step_num == 0:
+                out_text += f': First Step\n\n'
+            else:
+                out_text += f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n'
         out_text += replace_text_codes(quest_message)
         if self.current_step_num < self.total_step_number:
             if self.current_step_type == 'drunken-dragon':

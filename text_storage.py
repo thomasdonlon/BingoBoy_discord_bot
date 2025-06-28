@@ -112,7 +112,7 @@ item_descriptions = {
     'm9': r"Robe of Stars: Gain 1 additional skill point when you level up.",
     'm10': r"Lucky Rabbit's Foot: You have a 15% chance to automatically skip each quest step.",
     'h1': r"Map of Many Sips: Debauchery Tasks will be used to cover any missing non-Debauchery Tasks when completing sidequests.",
-    'h2': r"Dragon-Slaying Lance: The Drunken Dragon quest steps only require [2] of each type of task.",
+    'h2': r"Dragon-Slaying Lance: The Drunken Dragon quest steps only require [1] of each type of task.",
     'h3': r"Runestone of Repetition: 30% chance to complete each Task twice.",
     'h4': r"Potion of Progress: Completing a sidequest has a 30% chance of producing an Easy Quest Item Point.",
     'h5': r"Magic Rune: 30% chance to complete an additional quest step when you complete a quest step.",
