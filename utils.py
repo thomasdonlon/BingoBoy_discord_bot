@@ -56,40 +56,11 @@ def get_skill_description(skill, level):
     
 async def ctx_print(state, text, ephemeral=False):
     try:
-        # Check if the context and response are still valid
-        if not hasattr(state.ctx, 'response') or not state.ctx.response:
-            print(f"Invalid context response, falling back to channel message: {text}")
-            if hasattr(state.ctx, 'channel') and state.ctx.channel:
-                await state.ctx.channel.send(text)
-            return
-            
-        if state.ctx.response.is_done():
-            # Initial response has already been sent, use followup
-            await state.ctx.followup.send(text, ephemeral=ephemeral)
-        else:
-            # Initial response hasn't been sent yet, send it
-            await state.ctx.response.send_message(text, ephemeral=ephemeral)
-    except NotFound:
-        # Interaction has expired or been invalidated
-        print(f"Discord interaction expired while trying to send: {text}")
-        # Try to fall back to a channel message if possible
-        try:
-            if hasattr(state, 'channel') and state.channel:
-                await state.channel.send(text)
-            elif hasattr(state.ctx, 'channel') and state.ctx.channel:
-                await state.ctx.channel.send(text)
-        except Exception as e:
-            print(f"Failed to send fallback message: {e}")
-    except Exception as e:
-        print(f"Error in ctx_print: {e}")
-        # Try to fall back to a channel message if possible
-        try:
-            if hasattr(state, 'channel') and state.channel:
-                await state.channel.send(text)
-            elif hasattr(state.ctx, 'channel') and state.ctx.channel:
-                await state.ctx.channel.send(text)
-        except Exception as fallback_error:
-            print(f"Failed to send fallback message: {fallback_error}")
+        # Initial response has already been sent, use followup
+        await state.ctx.followup.send(text, ephemeral=ephemeral)
+    except:
+        # Initial response hasn't been sent yet, send it
+        await state.ctx.response.send_message(text, ephemeral=ephemeral)
 
 #----------------------------------
 # Helpers for Player Data
