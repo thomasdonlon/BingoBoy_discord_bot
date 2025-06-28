@@ -158,7 +158,7 @@ def quest_ai_prompt(name, current_step_number, total_step_number, type, context)
         prompt += f"This is the final step of the quest. Wrap up all content from previous steps. " \
                   f"The content of your response should be roughly 3 sentences long. " \
                   f"The player does not need to complete any additional tasks to finish the quest. " \
-                  f"Provide a reason why the player obtains an unspecified magical item as a reward for completing the quest, and why this quest did not solve the grog-drying spell. " \
+                  f"Remember that this quest did not solve the grog-drying spell. " \
                   f"The previous text in this quest is provided here: {context}"
     
     return prompt

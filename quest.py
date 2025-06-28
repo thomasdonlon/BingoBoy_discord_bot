@@ -227,7 +227,10 @@ class Quest:
             out_text += f': Step {self.current_step_num + 1} of {self.total_step_number}\n\n'
         out_text += replace_text_codes(quest_message)
         if self.current_step_num < self.total_step_number:
-            out_text += f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).'
+            if self.current_step_type == 'drunken-dragon':
+                out_text += f'\n\nRequires {self.current_step_num_tasks} of each task and {self.current_step_num_deb_tasks} debauchery tasks.'
+            else:
+                out_text += f'\n\nRequires {self.current_step_num_tasks} {self.current_step_type} tasks and {self.current_step_num_deb_tasks} debauchery task(s).'
 
         await state.ctx.followup.send(out_text)
 
