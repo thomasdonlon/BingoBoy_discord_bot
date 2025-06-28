@@ -288,7 +288,8 @@ async def start_quest(state, difficulty):
     if difficulty != 'drunken-dragon' and await inventory_contains(state, 'm8'):
         await ctx_print(state, "Item bonus! Scroll of Misty Step: You start this quest on the 2nd step.")
         quest = await Quest.from_state(state)
-        quest.current_step_num = 2
+        quest.current_step_num = 1
+        await quest.write_quest_to_db(state)
 
 async def progress_quest(state, skip_task_check=False):
     # check if the player has a quest
