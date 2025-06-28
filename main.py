@@ -426,6 +426,7 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
             await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = $1', state.player)
     
         # Log the task completion in the player's data
+        await state.ctx.response.defer() #this can take a little while sometimes
         await player.log_task(state, task_name)
 
         # Send a confirmation message

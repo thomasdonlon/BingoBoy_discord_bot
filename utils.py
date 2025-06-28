@@ -57,7 +57,7 @@ def get_skill_description(skill, level):
 async def ctx_print(state, text, ephemeral=False):
     try: #try a deferred context response 
         await state.ctx.followup.send(text, ephemeral=ephemeral)
-    except NotFound: #if the deferred response fails, send a regular interaction message instead
+    except: #if the deferred response fails, send a regular interaction message instead
         await state.ctx.response.send_message(text, ephemeral=ephemeral)
 
 #----------------------------------
