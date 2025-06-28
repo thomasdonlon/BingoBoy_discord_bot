@@ -67,7 +67,9 @@ async def display_player_status():
         embed = discord.Embed(title="Player Status", color=discord.Color.blue())
         for player in players:
             inventory_text = ', '.join([get_item_name(item).split(':')[0] for item in player['inventory'].split(',')]) if player['inventory'] else 'Empty'
-            embed.add_field(name=player['name'], value=f"Level: {player['level']}\nXP: {player['xp']}\nStrength: {player['strength_level']}\nAgility: {player['agility_level']}\nWisdom: {player['wisdom_level']}\nQuests: Easy - {player['easy_quest']}, Medium - {player['medium_quest']}, Hard - {player['hard_quest']}\nSidequests: {player['sidequest']}\nInventory: {inventory_text}", inline=False)
+            # Remove "-botcommands" suffix from player name for display
+            display_name = player['name'].rstrip('-botcommands')
+            embed.add_field(name=display_name, value=f"Level: {player['level']}\nXP: {player['xp']}\nStrength: {player['strength_level']}\nAgility: {player['agility_level']}\nWisdom: {player['wisdom_level']}\nQuests: Easy - {player['easy_quest']}, Medium - {player['medium_quest']}, Hard - {player['hard_quest']}\nSidequests: {player['sidequest']}\nInventory: {inventory_text}", inline=False)
 
         channel = bot.get_channel(summary_channel_id)  # Replace with your channel ID
         if channel:
@@ -348,7 +350,10 @@ async def status(ctx : discord.Interaction) -> None:
         if not current_player:
             return
 
-    embed = discord.Embed(title=f"{current_player['name']}", color=discord.Color.green())
+    # Remove "-botcommands" suffix from player name for display
+    display_name = current_player['name'].rstrip('-botcommands')
+
+    embed = discord.Embed(title=f"{display_name}", color=discord.Color.green())
     embed.add_field(name="Level", value=current_player['level'], inline=True)
     embed.add_field(name="XP", value=current_player['xp'], inline=True)
     embed.add_field(name="\u200b", value="\u200b", inline=True) #workaround for inline spacing
