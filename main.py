@@ -33,6 +33,8 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='$', intents=intents)
 tree = bot.tree
 
+pass_hash = -5589850025588590312 #hash used to password protect the bot commands we really don't want other people running
+
 #--------------------------------------
 # HELPERS/CONVENIENCE
 #--------------------------------------
@@ -153,9 +155,9 @@ async def on_guild_remove(guild:discord.Guild):
 
 # see https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html for usage of this command
 # it is generally enough to run $sync and then $sync *
+#@commands.is_owner()
 @bot.command()
 @commands.guild_only()
-@commands.is_owner()
 async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
     if not guilds:
         if spec == "~":
@@ -212,7 +214,10 @@ async def init_channel(ctx : discord.Interaction) -> None:
 @run_with_error_handling
 @tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
-async def override(ctx : discord.Interaction, player : str, parameter_name : str, value : str) -> None:
+async def override(ctx : discord.Interaction, password : str, player : str, parameter_name : str, value : str) -> None:
+    if hash(password) != pass_hash:
+        await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
+        return
     async with bot.pool.acquire() as con:
         await con.execute(f"UPDATE data SET {parameter_name} = '{value}' WHERE name = '{player}'")
     await ctx.response.send_message(f"Value override successful.", ephemeral=True)
@@ -241,7 +246,10 @@ async def stop_status_display(ctx : discord.Interaction) -> None:
 
 @run_with_error_handling
 @tree.command(name="reset_game", description="Resets the game data (Admin Only).")
-async def reset_game(ctx : discord.Interaction) -> None:
+async def reset_game(ctx : discord.Interaction, password : str) -> None:
+    if hash(password) != pass_hash:
+        await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
+        return
     async with bot.pool.acquire() as con:
         await con.execute(f"DROP TABLE data")
         await con.execute(f"DROP TABLE tasks")
