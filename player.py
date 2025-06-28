@@ -189,7 +189,7 @@ async def award_xp(state, xp_amount, double_allowed=True):
         await ctx_print(state, f"Awarded {xp_amount} XP (including {num_items} bonus from Bejeweled Scepter). Current XP: {current_xp}.")
     else:
         await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.")
-    if get_player_x(state, 'level') < 10:
+    if await get_player_x(state, 'level') < 10:
         await ctx_print(state, f"\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
 
 async def level_up(state):
