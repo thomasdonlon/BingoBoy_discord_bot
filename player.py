@@ -207,18 +207,18 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 
     #check if the level is valid
     if number < 1:
-        await state.ctx.response.send_message("Error: Level must be a positive integer.", ephemeral=True)
+        await ctx_print(state, "Error: Level must be a positive integer.", ephemeral=True)
         return
 
     #check that the player has enough skill points
     current_skill_points = await get_player_x(state, 'skill_points')
     if (current_skill_points == 0) or (current_skill_points < number):
-        await state.ctx.response.send_message("Error: Not enough skill points in pool.", ephemeral=True)
+        await ctx_print(state, "Error: Not enough skill points in pool.", ephemeral=True)
         return
 
     #check that the input is valid
     if skill_name not in ('strength', 's', 'agility', 'a', 'wisdom', 'w'):
-        await state.ctx.response.send_message("Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').", ephemeral=True)
+        await ctx_print(state, "Error: Acceptable inputs are 'strength' (or 's'), 'agility' (or 'a'), 'wisdom' (or 'w').", ephemeral=True)
         return
 
     #clean input
@@ -232,12 +232,12 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
     #make sure that the player is not trying to increment their skill level above 35
     old_skill_level = await get_player_x(state, f"{skill_name}_level")
     if old_skill_level == 35:
-        state.ctx.response.send_message(f"{skill_name} is already at max level!")
+        ctx_print(state, f"{skill_name} is already at max level!")
         return
 
     elif old_skill_level + number > 35:
         number = 35 - old_skill_level
-        state.ctx.response.send_message(f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
+        ctx_print(state, f"Skill levels can only be increased up to 35. Only {number} skill points have been spent.")
 
     #increment the skill level with a little message
     output_dict = {
@@ -246,7 +246,7 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
         'wisdom': 'smarter'
     }
     new_skill_level = await increment_player_x(state, f"{skill_name}_level", number)
-    await state.ctx.response.send_message(f"You have reached {skill_name} level {new_skill_level}! Your party grows {output_dict[skill_name]}.")
+    await ctx_print(state, f"You have reached {skill_name} level {new_skill_level}! Your party grows {output_dict[skill_name]}.")
 
     #if the skill level crossed one or more thresholds, display the descriptions for the new skills
     for threshold in skill_level_thresholds:
@@ -397,7 +397,7 @@ async def progress_quest(state, skip_task_check=False):
     }
 
     if complete_result: # the quest was completed
-        
+
         # Strength 35: Double the number of items you get from quest rewards
         strength_level = await get_player_x(state, 'strength_level')
         item_multiplier = 2 if strength_level >= 35 else 1
@@ -480,17 +480,17 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
             missing = required_tasks - non_deb_tasks_available
             if missing > 0:
                 if debauchery_available < (1 + missing):
-                    await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest (including covering missing non-debauchery tasks).")
+                    await ctx_print(state, "Error: Not enough debauchery tasks available to complete sidequest (including covering missing non-debauchery tasks).")
                     return
                 debauchery_to_spend += missing
                 non_deb_to_spend = non_deb_tasks_available
         else:
             #normal check if the player has enough banked tasks to complete the sidequest
             if debauchery_available < 1:
-                await state.ctx.followup.send("Error: Not enough debauchery tasks available to complete sidequest.")
+                await ctx_print(state, "Error: Not enough debauchery tasks available to complete sidequest.")
                 return
             if non_deb_tasks_available < required_tasks:
-                await state.ctx.followup.send(f"Error: Not enough {task_type} tasks available to complete sidequest.")
+                await ctx_print(state, f"Error: Not enough {task_type} tasks available to complete sidequest.")
                 return
 
     #generate the quest message
@@ -498,7 +498,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         sidequest_ai_prompt(task_type)
     )
     #send the quest message to the player
-    await state.ctx.followup.send(sidequest_message)
+    await ctx_print(state, sidequest_message)
 
     #do the actual machinery of completing the sidequest
     await increment_player_x(state, 'sidequest', 1)
@@ -563,7 +563,7 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
         await increment_player_x(state, 'easy_quest_points', 1)
         await ctx_print(state, "Item bonus! Potion of Progress: You gained an Easy Quest Item Point.")
 
-    await state.ctx.followup.send(f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
+    await ctx_print(state, f"You have completed a {task_type} sidequest! You have completed a total of {await get_player_x(state, 'sidequest')} sidequests.")
 
 #----------------------------------
 # Items
@@ -573,26 +573,26 @@ async def buy_item(state, item_id):
 
     #check that the item id has the correct format
     if item_id[0] not in ('e', 'm', 'h'):
-        await state.ctx.response.send_message("Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
+        await ctx_print(state, "Error: Invalid item ID format. Must start with 'e', 'm', or 'h'.")
         return
 
     #check if the player has enough item points for that tier of item
     if item_id[0] == 'e':
         if await get_player_x(state, 'easy_quest_points') < 1:
-            await state.ctx.response.send_message("Error: Not enough easy quest points to buy this item.")
+            await ctx_print(state, "Error: Not enough easy quest points to buy this item.")
             return
     elif item_id[0] == 'm':
         if await get_player_x(state, 'medium_quest_points') < 1:
-            await state.ctx.response.send_message("Error: Not enough medium quest points to buy this item.")
+            await ctx_print(state, "Error: Not enough medium quest points to buy this item.")
             return
     elif item_id[0] == 'h':
         if await get_player_x(state, 'hard_quest_points') < 1:
-            await state.ctx.response.send_message("Error: Not enough hard quest points to buy this item.")
+            await ctx_print(state, "Error: Not enough hard quest points to buy this item.")
             return
 
     #check if the player already has that item 
     if await inventory_contains(state, item_id):
-        await state.ctx.response.send_message("Error: You already have this item.")
+        await ctx_print(state, "Error: You already have this item.")
         return
 
     #add the item to the player's inventory
@@ -634,5 +634,5 @@ async def buy_item(state, item_id):
         await increment_player_x(state, 'medium_quest_points', -1)
     elif item_id[0] == 'h':
         await increment_player_x(state, 'hard_quest_points', -1)
-    await state.ctx.response.send_message(f"You have purchased {get_item_name(item_id)}.")
+    await ctx_print(state, f"You have purchased {get_item_name(item_id)}.")
 
