@@ -453,7 +453,7 @@ async def progress_quest(state, skip_task_check=False):
             await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
     # Magic Rune (d5): 30% chance to complete an additional quest step when you complete a quest step
     if not complete_result and await inventory_contains(state, 'h5') and await random_with_bonus(state) < 0.3:
-        complete_result = progress_quest(state, skip_task_check=True) # skip the task check since this is a bonus step
+        complete_result = await quest.progress_quest(state, skip_task_check=True) # skip the task check since this is a bonus step
         await ctx_print(state, "Item bonus! Magic Rune: You completed an additional quest step.")
     return
 

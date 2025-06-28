@@ -303,8 +303,8 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
     elif action == 'progress' or action == 'p':
         #progress the quest
         await state.ctx.response.defer() #this takes a while to interact with chatgpt
-        progress_result = await player.progress_quest(state) #is only not None if the quest is completed
-        if progress_result == 'drunken-dragon':
+        complete_result = await player.progress_quest(state) #is only not None if the quest is completed
+        if complete_result == 'drunken-dragon':
             end_game(ctx.channel)
 
     elif action == 'abandon' or action == 'a':
