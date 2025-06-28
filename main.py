@@ -216,7 +216,7 @@ async def init_channel(ctx : discord.Interaction) -> None:
 @tree.command(name="override", description="Manual value override for debugging/triage (Admin Only).")
 @commands.has_role('Admin')
 async def override(ctx : discord.Interaction, password : str, player : str, parameter_name : str, value : str) -> None:
-    if hashlib.sha256(bytes(password)).hexdigest() != pass_hash:
+    if hashlib.sha256(bytes(password.encode('utf-8'))).hexdigest() != pass_hash:
         await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
         return
     async with bot.pool.acquire() as con:
@@ -248,7 +248,7 @@ async def stop_status_display(ctx : discord.Interaction) -> None:
 @run_with_error_handling
 @tree.command(name="reset_game", description="Resets the game data (Admin Only).")
 async def reset_game(ctx : discord.Interaction, password : str) -> None:
-    if hashlib.sha256(bytes(password)).hexdigest() != pass_hash:
+    if hashlib.sha256(bytes(password.encode('utf-8'))).hexdigest() != pass_hash:
         await ctx.response.send_message("Error: Invalid password.", ephemeral=True)
         return
     async with bot.pool.acquire() as con:
