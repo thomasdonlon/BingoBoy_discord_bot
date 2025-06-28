@@ -642,5 +642,5 @@ async def buy_item(state, item_id):
         await increment_player_x(state, 'medium_quest_points', -1)
     elif item_id[0] == 'h':
         await increment_player_x(state, 'hard_quest_points', -1)
-    await ctx_print(state, f"You have purchased {get_item_name(item_id)}.")
+    await ctx_print(state, f"You have purchased {get_item_name(item_id)}")
 
