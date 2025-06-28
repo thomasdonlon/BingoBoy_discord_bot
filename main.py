@@ -408,10 +408,16 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
                 await ctx.response.send_message("You have no tasks logged.", ephemeral=True)
                 return
             
-            task_data = query_result[0]
-            task_list = [f"{task}: {task_data[task]}" for task in task_data if task != 'name']
-            task_list_text = '\n'.join(task_list) if task_list else "No tasks logged."
-            await ctx_print(state, f"Your logged tasks:\n{task_list_text}", ephemeral=True)
+            task_data = query_result[0]  # Get the first (and only) row for the player
+            task_list = []  # Initialize an empty list to store task information
+            for column in task_data.keys():
+                if column != 'name':
+                    task_count = task_data[column]
+                    if task_count > 0:
+                        task_list.append(f"{column}: {task_count}")
+            if task_list:
+                task_list_text = '\n'.join(task_list)
+                await ctx.response.send_message(f"Your logged tasks:\n{task_list_text}", ephemeral=True)
         return
 
     else:
