@@ -41,7 +41,7 @@ class Quest:
     async def create(cls, state, difficulty):
         self = cls()
         self.name = None
-        self.difficulty = difficulty #str, 'easy', 'medium' or 'hard'
+        self.difficulty = difficulty #str, 'easy', 'medium', 'hard', or 'drunken-dragon'
         self.current_step_num = 0
         self.total_step_number = None
         self.current_step_type = None
@@ -116,11 +116,6 @@ class Quest:
             elif self.difficulty == 'hard':
                 self.current_step_num_tasks = random.randint(3,5)
                 self.current_step_num_deb_tasks = random.randint(2,5)
-
-        # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
-        if await inventory_contains(state, 'm5'):
-            self.current_step_num_deb_tasks *= 2
-            #await state.ctx.followup.send("Item bonus! Cursed Keg: Debauchery Task requirement doubled for this quest step.")
         
         self.current_step_type = random.choice(('exploration', 'combat', 'puzzle', 'dialogue'))
 
@@ -133,6 +128,11 @@ class Quest:
                 self.current_step_num_tasks = 3
                 self.current_step_num_deb_tasks = 3
             self.current_step_type = 'drunken-dragon'
+
+        # m5: Cursed Keg - Quests require twice as many Debauchery Tasks
+        if await inventory_contains(state, 'm5'):
+            self.current_step_num_deb_tasks *= 2
+            #await state.ctx.followup.send("Item bonus! Cursed Keg: Debauchery Task requirement doubled for this quest step.")
             
     async def start_quest(self, state): #have it split up this way so that the AI messages can be more tailored to the current quest state
 
@@ -201,7 +201,7 @@ class Quest:
     async def progress_quest_message(self, state):
         #get a name for the quest
         if self.difficulty == 'drunken-dragon':
-            if self.current_step_num == 0:
+            if self.name is None:  # Only get a name for the quest at the start
                 self.name = "The Drunken Dragon"
 
             #generate the quest message
