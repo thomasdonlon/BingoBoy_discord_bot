@@ -278,7 +278,7 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         
         #ensure the player has no current quest
         async with bot.pool.acquire() as con:
-            if get_player_x(state, 'current_quest'):
+            if await get_player_x(state, 'current_quest'):
                 await ctx.response.send_message("Error: You already have a quest in progress. Please complete or abandon it before starting a new one.", ephemeral=True)
                 return
 
