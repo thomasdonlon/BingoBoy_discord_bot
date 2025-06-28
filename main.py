@@ -25,8 +25,9 @@ PG_PORT =               os.getenv('PGPORT')
 PG_DB =                 os.getenv('PGPDATABASE')
 
 test_guild_id = 1371909216138166474  #ID of the test server, which can be used to globally sync commands
-whitelist = (1371909216138166474,)  #currently only whitelisting the test server, add more IDs as needed
-summary_channel_id = 1373405473209847949  #channel ID for the bot status display, where the bot will post the player status updates
+whitelist = (1371909216138166474,185235239159726080)  #currently whitelisting the test server and pskgt, add more IDs as needed
+summary_channel_id = 1388509408711151678  #channel ID for the bot status display, where the bot will post the player status updates
+#1373405473209847949 #summary channel for test server
 
 intents = discord.Intents.default()
 intents.message_content = True
