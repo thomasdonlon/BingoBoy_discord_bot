@@ -400,6 +400,20 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
         #then take away the points from the player
         await player.remove_task(state, task_to_undo)
 
+    elif task_name == 'show':
+        #show the tasks that the player has logged
+        async with bot.pool.acquire() as con:
+            query_result = await con.fetch(f'SELECT * FROM tasks WHERE name = $1', state.player)
+            if not query_result:
+                await ctx.response.send_message("You have no tasks logged.", ephemeral=True)
+                return
+            
+            task_data = query_result[0]
+            task_list = [f"{task}: {task_data[task]}" for task in task_data if task != 'name']
+            task_list_text = '\n'.join(task_list) if task_list else "No tasks logged."
+            await ctx_print(state, f"Your logged tasks:\n{task_list_text}", ephemeral=True)
+        return
+
     else:
 
         #check if the task name is valid
