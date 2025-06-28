@@ -167,6 +167,7 @@ async def get_last_logged_task(state):
 #----------------------------------
 async def award_xp(state, xp_amount, double_allowed=True):
     # d8: Bejeweled Scepter - All XP drops are increased by 1 x the number of items you have
+    bejeweled_scepter = False
     if await inventory_contains(state, 'h8'):
         inventory_text = await get_player_x(state, 'inventory')
         num_items = len([item for item in inventory_text.split(',') if item])
