@@ -12,7 +12,7 @@ async def ai_get_response(prompt, model="o4-mini", max_tokens=1000): #gpt-4 was 
         response = openai.OpenAI().chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens
+            max_completion_tokens=max_tokens
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
