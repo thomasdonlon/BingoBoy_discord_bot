@@ -8,7 +8,7 @@
 import os, logging, asyncpg
 import player
 from quest import format_quest_status, Quest
-from utils import get_item_name, inventory_contains
+from utils import get_item_name, inventory_contains, ctx_print
 from typing import Literal, Optional
 import hashlib
 
@@ -402,7 +402,6 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
             await ctx.response.send_message("Error: Invalid task name. Must start with 'e', 'c', 'p', 'd', or 'b', followed by numbers.", ephemeral=True)
             return
 
-        await state.ctx.response.defer() #this can take a little while sometimes
         async with bot.pool.acquire() as con:
             # Check if the task already exists
             # if not, create a column for that task
@@ -427,10 +426,11 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
             await con.execute(f'UPDATE tasks SET {task_name} = {task_name} + 1 WHERE name = $1', state.player)
     
         # Log the task completion in the player's data
+        await state.ctx.response.defer() #this can take a little while sometimes
         await player.log_task(state, task_name)
 
         # Send a confirmation message
-        await ctx.response.send_message(f"Task '{task_name}' logged successfully.", ephemeral=True)
+        await ctx_print(state, f"Task '{task_name}' logged successfully.", ephemeral=True)
 
 @run_with_error_handling
 @tree.command(name="skill", description="Level up a skill.")
