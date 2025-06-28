@@ -183,7 +183,7 @@ async def award_xp(state, xp_amount, double_allowed=True):
             await level_up(state)
 
     #print an xp award message
-    await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
+    await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level')] - current_xp}.")
 
 async def level_up(state):
     await increment_player_x(state, 'level', 1)
