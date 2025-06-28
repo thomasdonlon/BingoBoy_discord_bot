@@ -435,14 +435,15 @@ async def task(ctx : discord.Interaction, task_name : str, task_to_undo : str = 
 @run_with_error_handling
 @tree.command(name="skill", description="Level up a skill.")
 async def skill(ctx : discord.Interaction, skill_name : str, number : int) -> None:
-
     state = State(bot, ctx, ctx.channel.name)
+    await state.ctx.response.defer() #this can take a little while sometimes
     await player.allocate_skill_points(state, skill_name, number)
     
 @run_with_error_handling
 @tree.command(name="item", description="Buy an item from the shop.")
 async def item(ctx : discord.Interaction, item_name : str) -> None:
     state = State(bot, ctx, ctx.channel.name)
+    await state.ctx.response.defer() #this can take a little while sometimes
     await player.buy_item(state, item_name) #this function handles all the purchase logic and checks for valid inputs, etc.
     
 #--------------------------------------
