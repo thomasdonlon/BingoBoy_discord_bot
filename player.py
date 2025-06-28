@@ -111,7 +111,7 @@ async def log_task(state, task_name, rune_of_rep=False):
     if not rune_of_rep and await inventory_contains(state, 'h3') and await random_with_bonus(state) < 0.3: #avoid runestone activating off of a runestone proc
         # Log the task twice
         await ctx_print(state, "Item bonus! Runestone of Repetition: You completed this task twice!")
-        await log_task(state, task_name)
+        await log_task(state, task_name, rune_of_rep=True)
         return
 
     # Strength 3: 25% chance for extra combat task
