@@ -429,19 +429,19 @@ async def progress_quest(state, skip_task_check=False):
     else:
         # if the quest was not completed, check for item abilities to skip steps
         # Elven Compass (e1) - 25% chance to skip an exploration quest step
-        if await inventory_contains(state, 'e1') and await random_with_bonus(state) < 0.25 and task_type == 'exploration':
+        if await inventory_contains(state, 'e1') and await random_with_bonus(state) < 0.25 and quest.current_step_type == 'exploration':
             await ctx_print(state, "Item bonus! Elven Compass: You skipped an exploration quest step.")
             complete_result = await quest.progress_quest(state)
         # Invisibility Cloak (e2) - 25% chance to skip a combat quest step
-        elif await inventory_contains(state, 'e2') and await random_with_bonus(state) < 0.25 and task_type == 'combat':
+        elif await inventory_contains(state, 'e2') and await random_with_bonus(state) < 0.25 and quest.current_step_type == 'combat':
             await ctx_print(state, "Item bonus! Invisibility Cloak: You skipped a combat quest step.")
             complete_result = await quest.progress_quest(state)
         # Lockpick Set (e3) - 25% chance to skip a puzzle quest step
-        elif await inventory_contains(state, 'e3') and await random_with_bonus(state) < 0.25 and task_type == 'puzzle':
+        elif await inventory_contains(state, 'e3') and await random_with_bonus(state) < 0.25 and quest.current_step_type == 'puzzle':
             await ctx_print(state, "Item bonus! Lockpick Set: You skipped a puzzle-solving quest step.")
             complete_result = await quest.progress_quest(state)
         # Silver Tongue (e4) - 25% chance to skip a dialogue quest step
-        elif await inventory_contains(state, 'e4') and await random_with_bonus(state) < 0.25 and task_type == 'dialogue':
+        elif await inventory_contains(state, 'e4') and await random_with_bonus(state) < 0.25 and quest.current_step_type == 'dialogue':
             await ctx_print(state, "Item bonus! Silver Tongue: You skipped a dialogue quest step.")
             complete_result = await quest.progress_quest(state)
         # Lucky Rabbit's Foot (m10) - 15% chance to skip any quest step

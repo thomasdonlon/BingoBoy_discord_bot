@@ -266,11 +266,11 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
     state = State(bot, ctx, ctx.channel.name)
 
     #check if the action is valid
-    if action not in ('start', 'progress', 'abandon'):
+    if action not in ('start', 'progress', 'abandon', 's', 'p', 'a'):
         await ctx.response.send_message("Error: Invalid action. Must be 'start', 'progress', or 'abandon'.", ephemeral=True)
         return
 
-    if action == 'start':
+    if action == 'start' or action == 's':
         #ensure there is a difficulty argument
         if not difficulty:
             await ctx.response.send_message("Error: You must specify a difficulty for the quest. Use 'easy' ('e'), 'medium' ('m'), or 'hard' ('h').", ephemeral=True)
@@ -300,14 +300,14 @@ async def quest(ctx : discord.Interaction, action : str, difficulty : str = None
         await state.ctx.response.defer() #this takes a while to interact with chatgpt
         await player.start_quest(state, difficulty)
     
-    elif action == 'progress':
+    elif action == 'progress' or action == 'p':
         #progress the quest
         await state.ctx.response.defer() #this takes a while to interact with chatgpt
         progress_result = await player.progress_quest(state) #is only not None if the quest is completed
         if progress_result == 'drunken-dragon':
             end_game(ctx.channel)
 
-    elif action == 'abandon':
+    elif action == 'abandon' or action == 'a':
         #abandon the quest
         await player.abandon_quest(state)
 
