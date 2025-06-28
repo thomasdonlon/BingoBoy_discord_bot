@@ -509,6 +509,11 @@ async def complete_sidequest(state, task_type, skip_task_check=False):
     sidequest_message = await conversation.ai_get_response(
         sidequest_ai_prompt(task_type)
     )
+    
+    # Ensure we have a valid message before sending
+    if not sidequest_message or not sidequest_message.strip():
+        sidequest_message = f"You have completed a {task_type} sidequest! (AI response unavailable)"
+    
     #send the quest message to the player
     await ctx_print(state, sidequest_message)
 

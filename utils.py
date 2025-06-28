@@ -55,12 +55,36 @@ def get_skill_description(skill, level):
         return "Unknown Skill Level"
     
 async def ctx_print(state, text, ephemeral=False):
+    # Handle empty or None messages
+    if not text or not text.strip():
+        print("Warning: Attempted to send empty message via ctx_print")
+        return
+    
     try:
-        # Initial response has already been sent, use followup
-        await state.ctx.followup.send(text, ephemeral=ephemeral)
-    except:
-        # Initial response hasn't been sent yet, send it
-        await state.ctx.response.send_message(text, ephemeral=ephemeral)
+        if state.ctx.response.is_done():
+            # Initial response has already been sent, use followup
+            await state.ctx.followup.send(text, ephemeral=ephemeral)
+        else:
+            # Initial response hasn't been sent yet, send it
+            await state.ctx.response.send_message(text, ephemeral=ephemeral)
+    except NotFound:
+        # Interaction has expired or been invalidated
+        print(f"Discord interaction expired while trying to send: {text}")
+        # Try to fall back to a channel message if possible
+        try:
+            if hasattr(state.ctx, 'channel') and state.ctx.channel:
+                await state.ctx.channel.send(text)
+        except Exception as e:
+            print(f"Failed to send fallback message: {e}")
+    except Exception as e:
+        print(f"Error in ctx_print: {e} - Message: {text}")
+        # Only try fallback for certain error types, not interaction errors
+        if "InteractionResponded" not in str(e):
+            try:
+                if hasattr(state.ctx, 'channel') and state.ctx.channel:
+                    await state.ctx.channel.send(text)
+            except Exception as fallback_error:
+                print(f"Failed to send fallback message: {fallback_error}")
 
 #----------------------------------
 # Helpers for Player Data

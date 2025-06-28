@@ -217,6 +217,10 @@ class Quest:
                 quest_ai_prompt(self.name, self.current_step_num, self.total_step_number, self.current_step_type, self.text_log)
             )
 
+            # Ensure we have a valid message before sending
+            if not quest_message or not quest_message.strip():
+                quest_message = f"You have completed a {self.current_step_type} quest step! (AI response unavailable)"
+
         quest_message = sanitize_text(quest_message)  # Clean the text to remove any naughty SQL characters
         
         #send the quest message to the player
