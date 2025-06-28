@@ -9,7 +9,7 @@ Your goal: Become a party of strong heroes, locate this Drunken Dragon, and slay
 
 --------------------------------------------,
 Overview:
-Your team begins at level 1 with no XP. Completing quests will give you XP to level up, as well as beneficial items with powerful bonuses. As you level up, you may improve your skills, which provide helpful boons. At level 10, you may choose to fight the Drunken Dragon. The first team to defeat the Drunken Dragon and save Brewgard wins!
+Your team begins at level 1 with no XP. Completing quests will give you XP to level up, as well as beneficial items with powerful bonuses. As you level up, you may improve your skills, which provide helpful boons. At level 20, you may choose to fight the Drunken Dragon. The first team to defeat the Drunken Dragon and save Brewgard wins!
 
 Your progress in your mission will be tracked by the BingoBoy bot, which you interact with in your team-specific bot channel. The progress of each team will be shown in the <<to be determined channel>>. 
 
@@ -19,12 +19,12 @@ Tasks:
 The Task List returns in this game of tankards & trials! This time, the task list is split into 5 categories: Exploration, Combat, Puzzle-Solving, Dialogue, and Debauchery. Once you complete a task, you can add it to your "Completed Task Pool", which can then be spent to progress quests and sidequests. Tasks may be completed multiple times, but no more than 5 times per task (except for Debauchery Tasks, which may be completed as many times as you like).
 
 XP and Levels:
-You begin at level 1 with 0 XP. You level up by gaining XP. The amount of XP required to level up increases per level; level 2 requires 100 XP, level 3 requires 200 more XP (a total of 300 XP), level 4 requires 300 more XP (a total of 600 XP), etc. The maximum level is 10. 
+You begin at level 1 with 0 XP. You level up by gaining XP. The amount of XP required to level up increases per level; level 2 requires 100 XP, level 3 requires 200 more XP (a total of 300 XP), level 4 requires 300 more XP (a total of 600 XP), etc. The maximum level is 20. 
 
 Skills:
 Your party has 3 skills: Strength, Dexterity, and Wisdom. Each skill can be leveled up by allocating skill points; at certain levels, you gain access to powerful bonuses that will help you complete quests, gain XP, and defeat the Drunken Dragon more quickly. 
 
-When you level up, you gain skill points. The number of skill points you gain is equal to your new level: for example, when you become level 2, you gain 2 skill points; at level 6, you gain 6 skill points. You begin with 1 skill point -- allocate it as soon as you can. (You will have a total of 45 skill points at level 10.)
+When you level up, you gain skill points. The number of skill points you gain is equal to your new level: for example, when you become level 2, you gain 2 skill points; at level 6, you gain 6 skill points. You begin with 1 skill point -- allocate it as soon as you can. (You will have a total of 210 skill points at level 20.)
 
 Quests:
 Quests are a sequential collection of tasks that provide your hero with a substantial amount of XP and a Magical Item upon completion. Each step of a quest will call for a radomly generated number and type of task in order to progress. 
@@ -53,8 +53,8 @@ Sidequests allow you to spend completed tasks without the category restrictions 
 Sidequests provide telescoping XP: The first sidequest you complete is worth 10 XP. The second sidequest you complete will be worth 20 XP, the third is worth 30 XP, and so on.
 '''
 
-#hard coding because I'm lazy
-xp_level_thresholds = (100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500) 
+#hard coding because I'm lazy - XP thresholds for levels 2-20
+xp_level_thresholds = (100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800, 9100, 10500, 12000, 13600, 15300, 17100, 19000, 21000) 
 skill_level_thresholds = (1, 3, 5, 10, 15, 20, 28, 35)
 
 skill_level_descriptions = {
@@ -176,7 +176,7 @@ def sidequest_ai_prompt(type):
 def drunken_dragon_ai_prompt(current_step_number, total_step_number, context):
     prompt = base_ai_prompt + \
     f"You are currently generating a quest for the player to complete. " \
-    f"This is the Drunken Dragon quest, which is a special quest that is only available to players who have reached max level. " \
+    f"This is the Drunken Dragon quest, which is a special quest that is only available to players who have reached level 20. " \
     f"The players are trying to defeat the Drunken Dragon, which has been terrorizing the Kingdom of Brewgard. " \
     f"They have to hunt it down in the wilderness, and then defeat it in a final battle. " \
 

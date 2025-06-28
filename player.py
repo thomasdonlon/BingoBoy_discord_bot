@@ -190,7 +190,7 @@ async def award_xp(state, xp_amount, double_allowed=True):
         await ctx_print(state, f"Awarded {xp_amount} XP (including {num_items} bonus from Bejeweled Scepter). Current XP: {current_xp}.")
     else:
         await ctx_print(state, f"Awarded {xp_amount} XP. Current XP: {current_xp}.")
-    if await get_player_x(state, 'level') < 10:
+    if await get_player_x(state, 'level') < 20:
         await ctx_print(state, f"\nXP needed for next level: {xp_level_thresholds[await get_player_x(state, 'level') - 1] - current_xp}.")
 
 async def level_up(state):
@@ -274,11 +274,11 @@ async def allocate_skill_points(state, skill_name, number): #TODO: on level up, 
 #----------------------------------
 
 async def start_quest(state, difficulty):
-    #if difficulty is 'drunken-dragon', check that the player is level 10
+    #if difficulty is 'drunken-dragon', check that the player is level 20
     if difficulty == 'drunken-dragon':
         current_level = await get_player_x(state, 'level')
-        if current_level < 10:
-            await ctx_print(state, "Error: You must be at least level 10 to start the Drunken Dragon quest.", ephemeral=True)
+        if current_level < 20:
+            await ctx_print(state, "Error: You must be at least level 20 to start the Drunken Dragon quest.", ephemeral=True)
             return
 
     #initialize the quest object (starts the quest and writes it to the database)
@@ -452,7 +452,7 @@ async def progress_quest(state, skip_task_check=False):
             await ctx_print(state, "Item bonus! Silver Tongue: You skipped a dialogue quest step.")
             complete_result = await quest.progress_quest(state)
         # Lucky Rabbit's Foot (m10) - 15% chance to skip any quest step
-        if not complete_result and await inventory_contains(state, 'm10') and await random_with_bonus(state) < 0.15:
+        elif await inventory_contains(state, 'm10') and await random_with_bonus(state) < 0.15:
             complete_result = await quest.progress_quest(state)
             await ctx_print(state, "Item bonus! Lucky Rabbit's Foot: You skipped a quest step.")
     # Magic Rune (d5): 30% chance to complete an additional quest step when you complete a quest step
